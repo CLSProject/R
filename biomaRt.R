@@ -13,10 +13,12 @@ gene_symbols <- c("BRCA2", "TP53", "BRAF")
 
 # Get ALL available attributes (metadata fields) for genes
 all_attributes <- listAttributes(ensembl)$name
+#core_attributes <- c("hgnc_symbol", "ensembl_gene_id", "entrezgene_id",
+                    # "chromosome_name", "start_position", "end_position",
+                     #"gene_biotype", "description", "go_id", "kegg_enzyme")
 core_attributes <- c("hgnc_symbol", "ensembl_gene_id", "entrezgene_id",
                      "chromosome_name", "start_position", "end_position",
-                     "gene_biotype", "description", "go_id", "kegg_enzyme")
-
+                     "gene_biotype", "description")
 # Retrieve all information (caution: returns >80 fields per gene)
 gene_data <- getBM(
   attributes = core_attributes,  # Retrieve all available fields
@@ -35,9 +37,7 @@ listAttributes(ensembl)$name
 ensembl <- useEnsembl(biomart = "genes", dataset = "hsapiens_gene_ensembl")
 
 # Verified core attributes (no kegg_enzyme)
-core_attributes <- c("hgnc_symbol", "ensembl_gene_id", "entrezgene_id",
-                     "chromosome_name", "start_position", "end_position",
-                     "gene_biotype", "description")
+
 
 gene_data <- getBM(
   attributes = core_attributes,
@@ -47,3 +47,5 @@ gene_data <- getBM(
 )
 
 head(gene_data)
+write.csv(as.matrix(gene_data), file = "gene_data.csv", row.names = FALSE)
+
