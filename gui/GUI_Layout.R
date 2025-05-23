@@ -1,5 +1,4 @@
 library(shiny)
-library(colourpicker)
 
 ui <- fluidPage(
   titlePanel("CLS Analyseplattform"),
@@ -52,16 +51,16 @@ ui <- fluidPage(
                   ),
       
       selectInput("clustercrit", "Cluster criterion...",
-                  choices = c("Group by: Patients", "Group by: Genes")
+                  choices = c("Group by: Patients", "Group by: Genes", "Group by: Patients and Genes")
                   ),
       
       
       hr(),
       h4("Visualization Settings"),
       
-      colourInput("color_low", "Color one", value = "#FF0000"),
-      colourInput("color_high", "Color 2", value = "#008512"),
-      
+      selectInput("colorpattern", "Select Colorpattern...",
+                  choices = c("Rainbow", "Heat", "Topo")
+      ), # Farbpattern 
       
       hr(),
       actionButton("submit", "Submit")
