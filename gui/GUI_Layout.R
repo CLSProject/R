@@ -1,6 +1,8 @@
 library(shiny)
+library(shinyjs)
 
 ui <- fluidPage(
+  shinyjs::useShinyjs(), 
   titlePanel("CLS Analyseplattform"),
   
   sidebarLayout(
@@ -47,8 +49,14 @@ ui <- fluidPage(
                   ),
       
       selectInput("linkage", "Linkage criterion...",
-                  choices = c("Single Linkage", "Complete Linkage", "Average Linkage")
+                  choices = c("Single Linkage", "Complete Linkage", "free parameter selection")
                   ),
+      fluidRow(
+        column(3, numericInput("alpha_i", "alpha_i:", value = 0.5, step = 0.1)),
+        column(3, numericInput("alpha_j", "alpha_j:", value = 0.5, step = 0.1)),
+        column(3, numericInput("beta", "beta:", value = 0, step = 0.1)),
+        column(3, numericInput("gamma", "gamma:", value = 0.5, step = 0.1))
+      ),
       
       selectInput("clustercrit", "Cluster criterion...",
                   choices = c("Group by: Patients", "Group by: Genes", "Group by: Patients and Genes")
@@ -76,6 +84,34 @@ ui <- fluidPage(
 )
 server <- function (input, output, session) {
   
+  observe({  # Eingabe der Parameter nur bei freier Parameterwahl erlauben
+    if (input$linkage == "Complete Linkage") {
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0.5)
+      updateNumericInput(session, "alpha_j", value = 0.5)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = -0.5)
+    } else if (input$linkage == "Single Linkage"){
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0.5)
+      updateNumericInput(session, "alpha_j", value = 0.5)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = 0.5)
+    } else {
+      shinyjs::enable("alpha_i")
+      shinyjs::enable("alpha_j")
+      shinyjs::enable("beta")
+      shinyjs::enable("gamma")
+    }
+  })
 }
 
 shinyApp(ui = ui, server = server)
