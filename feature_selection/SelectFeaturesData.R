@@ -12,17 +12,17 @@ ensure_gene_ids_are_strings <- function(genes) {
 }
 
 
-find_all_occurring_gene_ids <- function(rownames_data, genes) {
-  genes[genes %in% rownames_data]
+find_all_occurring_genes <- function(rownames_data, genes, gene_names) {
+  mask_occurring <- genes %in% rownames_data
+  list(genes[mask_occurring], gene_names[mask_occurring])
 }
 
-filter_matrix_by_genes <- function(data, genes) {
-  data[genes, ]
-}
 
-get_filtered_matrix_genes <- function(data, genes) {
+get_filtered_matrix_genes <- function(data, genes, names) {
   genes <- ensure_gene_ids_are_strings(genes)
-  occuring_genes <- find_all_occurring_gene_ids(rownames(data), genes)
-  data_filtered <- filter_matrix_by_genes(data, occuring_genes)
-  list(data_filtered, occuring_genes)
+
+  occuring_genes_results <- find_all_occurring_genes(rownames(data), genes)
+  data_filtered <- data[occuring_genes_results[[1]], ]
+
+  list(data_filtered, occuring_genes_results[[1]], occuring_genes_results[[2]])
 }
