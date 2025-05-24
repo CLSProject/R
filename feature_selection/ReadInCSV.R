@@ -3,27 +3,31 @@ library(dplyr)
 
 ###
 # reading CSV
-find_patient_data_csv_files <- function() {
-  wd <- getwd()
-  list.files(wd, pattern = ".*[.]csv", full.names = TRUE)
-}
+# find_patient_data_csv_files <- function() {
+#   wd <- getwd()
+#   list.files(wd, pattern = ".*[.]csv", full.names = TRUE)
+# }
 
-has_found_csv_files <- function(found_files) {
-  if (length(found_files) > 0) {
-    return(TRUE)
-  }
-  FALSE
-}
+# has_found_csv_files <- function(found_files) {
+#   if (length(found_files) > 0) {
+#     return(TRUE)
+#   }
+#   FALSE
+# }
 
-read_patient_data_csv <- function() {
-  dir_csv_files <- find_patient_data_csv_files()
-  if (! has_found_csv_files(dir_csv_files)) {
-    break
+read_patient_data_csv <- function(file_name) {
+  # dir_csv_files <- find_patient_data_csv_files()
+  # if (! has_found_csv_files(dir_csv_files)) {
+  #   break
+  # }
+  # info_dir_csv_files <- file.info(dir_csv_files)
+  # # most recent CSV file
+  # latest_csv_file_name <- rownames(info_dir_csv_files)[which.max(info_dir_csv_files$mtime)] # nolint: line_length_linter.
+  if (file_test(file_name)) {
+    read.csv(file_name)
+  } else {
+    NULL
   }
-  info_dir_csv_files <- file.info(dir_csv_files)
-  # most recent CSV file
-  latest_csv_file_name <- rownames(info_dir_csv_files)[which.max(info_dir_csv_files$mtime)] # nolint: line_length_linter.
-  read.csv(latest_csv_file_name)
 }
 
 
@@ -65,13 +69,8 @@ convert_to_matrix <- function(data) {
 }
 
 
-get_processed_patient_data <- function() {
-  # patient_data <- read_patient_data_csv()
-  patient_data <- read.csv(paste(getwd(),
-                                 "/feature_selection/data",
-                                 "/Colon_vs_Pancreas_selected.csv",
-                                 sep = "", collapse = ""))
-
+get_processed_patient_data <- function(file_name = "") {
+  patient_data <- read_patient_data_csv(file_name)
   patient_data <- expression_ids_as_indizes(patient_data)
 
   # extracting labels
