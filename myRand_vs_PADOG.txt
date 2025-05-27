@@ -1,2 +1,0 @@
-summary.Method	summary.p.geomean	summary.p.med	summary...p.value.0.05	summary...q.value.0.05	summary.rank.mean	summary.rank.med	summary.p.Wilcox.	summary.p.LME	summary.coef..LME	ranks.GSA	ranks.PADOG	ranks.myRand	pvalues.GSA	pvalues.PADOG	pvalues.myRand	qvalues.GSA	qvalues.PADOG	qvalues.myRand
-GSA	GSA	
