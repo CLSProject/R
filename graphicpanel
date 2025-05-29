@@ -18,6 +18,8 @@ zeichne_heatmap <- function(daten_matrix, palette_colors, zeilen_dendrogramm = N
   min_wert <- min(daten_matrix, na.rm = TRUE)
   max_wert <- max(daten_matrix, na.rm = TRUE)
   
+  print(paste("Min:", min_wert, "Max:", max_wert)) #Debug
+  
   layout(matrix(c(1, 2), nrow = 1), widths = c(1.5, 5)) # 1 Dendrogramm links, 2 Heatmap rechts
   
   # Dendrogramm links
@@ -61,13 +63,15 @@ zeichne_heatmap <- function(daten_matrix, palette_colors, zeilen_dendrogramm = N
 
 server <- function(input, output, session) {
   
-  # Daten einlesen und z-standardisieren
+  # Daten einlesen 
   data <- reactive({
     req(input$file)
     df <- read.csv(input$file$datapath, header = TRUE, row.names = 1)
     df <- df[-nrow(df), ]
     df <- df[, sapply(df, is.numeric)]  # nur numerische Spalten
-    smalldata <- scale(df[1:5, 1:5])    # Z-Transformation (Mittel = 0, Standardabweichung = 1)
+    
+    # Z-Transformation 
+    smalldata <- scale(df[1:20,1:20])
     smalldata
   })
   
@@ -104,8 +108,8 @@ server <- function(input, output, session) {
       df <- df[row_order, col_order]
       zeichne_heatmap(df, farben_palette(), cluster$gene_clustering)
     },
-    height = 800,
-    width = 1000
+    height = 500,
+    width = 800
   )
   
   output$download_plot <- downloadHandler(
