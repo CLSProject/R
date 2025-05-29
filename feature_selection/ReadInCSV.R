@@ -26,7 +26,7 @@ read_patient_data_csv <- function(file_name) {
   # info_dir_csv_files <- file.info(dir_csv_files)
   # # most recent CSV file
   # latest_csv_file_name <- rownames(info_dir_csv_files)[which.max(info_dir_csv_files$mtime)] # nolint: line_length_linter.
-  if (file_test(file_name)) {
+  if (file_test("-r", file_name)) {
     read.csv(file_name)
   } else {
     NULL

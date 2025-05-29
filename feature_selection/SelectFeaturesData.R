@@ -12,12 +12,13 @@ ensure_gene_ids_are_strings <- function(gen_ids) {
 }
 
 
-filter_usable_gen_ids <- function(gen_ids, limit = 0) {
+filter_usable_gen_ids <- function(gen_ids, limit) {
   gen_ids <- gen_ids[gen_ids != "0"]
   # if given a limit of genes
   if (limit > 0) {
-    gen_ids[1:min(limit, length(gen_ids))]
+    gen_ids <- gen_ids[1:min(limit, length(gen_ids))]
   }
+  return(gen_ids)
 }
 
 
