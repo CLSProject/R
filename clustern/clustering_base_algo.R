@@ -1,20 +1,26 @@
-agglomerative_clustering_base_algo<-function(data=NULL,dist,distance_measure,linkage_criterium,cluster_rows,cluster_cols){
-  if (linkage_criterium=="single linkage"){
-    alpha_i=0.5
-    alpha_j=0.5
-    beta=0
-    gamma=-0.5
+getOrder_dfs<-function(merge){
+  root<-nrow(merge)
+  order<-c()
+  dfs<-function(node){
+    for (child in merge[node,]){
+      if (child <0){
+         order<-c(order,-child)
+      }
+      else  order<-c(order,dfs(child))
+    }
+    return (order)
   }
-  if (cluster_cols){
-    #dist=  dist_mat <- as.matrix(dist((t(data)), method = distance_measure))
-    #dist<-c(0,1,2,9,13,1,0,5,10,10,2,5,0,5,13,9,10,5,0,4,13,10,13,4,0)
-    #dim(dist)<-c(5,5)
-    n<-ncol(data)
+  dfs(root)
+}
+
+
+agglomerative_clustering_base_algo<-function(dist,alpha_i=0.5,alpha_j=0.5,beta=0,gamma=0,link_crit=""){
+    n<-ncol(dist)
     colnames(dist)<-as.character(-(1:n))
     rownames(dist)<-as.character(-(1:n))
     clusters <- lapply(1:n, function(i) -i)
     names(clusters)<-as.character(-(1:n))
-    labels<-colnames(data)
+    #labels<-colnames(data)
     
     merge<-matrix(0,nrow = n-1,ncol=2)
     storage.mode(merge)<-"integer"
@@ -49,29 +55,32 @@ agglomerative_clustering_base_algo<-function(data=NULL,dist,distance_measure,lin
       new_cluster_points <- c(ci_points, cj_points)
       
       new_cluster_name <- as.character(cluster_id_counter)
+
       
-      
-      idx_ci <- if (length(ci_points) == 1) ci_points else ci_name  # Wenn Einzelpunkt, dann negativ
-      idx_cj <- if (length(cj_points) == 1) cj_points else cj_name
-      
-      merge[cluster_id_counter, ] <- c(as.integer(idx_ci), as.integer(idx_cj))
+      merge[cluster_id_counter, ] <- c(as.integer(ci_name), as.integer(cj_name))
       height[cluster_id_counter] <- min_dist
       
+      cluster_i_size=length(clusters[[ci_name]])
+      cluster_j_size=length(clusters[[cj_name]])
       
-      
-      idx_to_remove <- sort(pair, decreasing = TRUE)
-      
-      clusters[[idx_to_remove[1]]] <- NULL
-      clusters[[idx_to_remove[2]]] <- NULL
-      #cluster die in dem schritt nicht fusioniert wurden->h
-      not_fused_clusters<-clusters[!(names(clusters) %in% c(ci_name, cj_name))]
-      clusters[[as.character(cluster_id_counter)]]<-new_cluster_points#MÜSSTE GLEICH SEIN
+      clusters_to_remove <- sort(pair, decreasing = TRUE)
+      clusters[[clusters_to_remove[1]]] <- NULL
+      clusters[[clusters_to_remove[2]]] <- NULL
+
+
+      not_fused_clusters<-clusters      #h>cluster die in dem schritt nicht fusioniert wurden
+      clusters[[as.character(cluster_id_counter)]]<-new_cluster_points
       #Distanzen zu nicht fusionierten Clustern neu berechnen
       #cluster die in dem schritt nicht fusioniert wurden->h
       #Cluster die fusioniert wurden i und j
       #neu gebildetes Cluster k
       new_distances<-numeric(length(not_fused_clusters))
       k<-new_cluster_name
+      if (link_crit=="UPGMA"){
+        alpha_i=cluster_i_size/(cluster_i_size+cluster_j_size)
+        alpha_j=cluster_j_size/(cluster_i_size+cluster_j_size)
+        
+      }
       if (length(not_fused_clusters)>0){
         for (i in 1:length(not_fused_clusters)){
           
@@ -104,34 +113,49 @@ agglomerative_clustering_base_algo<-function(data=NULL,dist,distance_measure,lin
     }
     
     
-  }
+  
   #hclust-Objekt nachahmen
   hc <- list(
     merge = merge,
     height = height,
-    order = 1:n,
-    labels = labels,
-    method = linkage_criterium,
+    order = getOrder_dfs(merge),
+    labels = "labels",
+    method = link_crit,
     call = match.call(),
-    dist.method = distance_measure
+    dist.method = "dist_crit"
   )
   
   class(hc) <- "hclust"
   return(hc)
 }
 
-
+cluster_both<-function(data,alpha_i,alpha_j,beta,gamma,dist_crit,link_crit=""){
+  dist_pat<-as.matrix(dist((t(data)),method=dist_crit))
+  dist_gene<-as.matrix(dist(data,method=dist_crit))
+  pat_clustering=agglomerative_clustering_base_algo(dist=dist_pat,alpha_i=alpha_i,alpha_j=alpha_j,beta=beta,gamma=gamma,link_crit=link_crit)
+  gene_clustering=agglomerative_clustering_base_algo(dist=dist_gene,alpha_i=alpha_i,alpha_j=alpha_j,beta=beta,gamma=gamma,link_crit=link_crit)
+  return(list(
+    pat_clustering = pat_clustering,
+    gene_clustering = gene_clustering
+  ))
+    
+}
 
 load("TCGA_kidney_unnormalized.RData")
 data=dataset$data
 small_data=data[1:5,1:5]
+cluster_result<-cluster_both(data=small_data,alpha_i=0.5,alpha_j=0.5,beta=0,gamma=0.5,dist_crit="euclidean",link_crit="UPGMA")
 dist=  dist_mat <- as.matrix(dist((t(small_data)), method = "euclidean"))
-result_small<-agglomerative_clustering_base_algo(data=small_data,dist=dist,distance_measure="euclidean","single linkage",FALSE,TRUE)
-merge=result_small$merge
+#result_small<-agglomerative_clustering_base_algo(data=small_data,dist=dist,distance_measure="euclidean","single linkage",FALSE,TRUE)
+#merge=result_small$merge
 dist<-c(0,1,2,9,13,1,0,5,10,10,2,5,0,5,13,9,10,5,0,4,13,10,13,4,0)
 dim(dist)<-c(5,5)
-result_test<-agglomerative_clustering_base_algo(data=small_data,dist=dist,"euclidean","single linkage",FALSE,TRUE)
-merge_test<-result_test$merge
+#result_test<-agglomerative_clustering_base_algo(data=small_data,dist=dist,"euclidean","single linkage",FALSE,TRUE)
+#merge_test<-result_test$merge
+#result_complete<-agglomerative_clustering_base_algo(data=small_data,dist=dist,"euclidean","complete linkage",FALSE,TRUE)
+result_upgma<-agglomerative_clustering_base_algo(dist=dist,link_crit="UPGMA")
+hcl_upgma<-hclust(as.dist(dist), method="average",members=NULL)
 hcl_test<-hclust(as.dist(dist), method="single",members=NULL)
+hcl_complete<-hclust(as.dist(dist),method="complete",members=NULL)
 merge_hclust<-hcl_test$merge
 hcl_small<-hclust(dist(t(small_data)), method="single",members=NULL)

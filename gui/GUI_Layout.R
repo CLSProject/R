@@ -1,7 +1,35 @@
 library(shiny)
-library(colourpicker)
+library(shinyjs)
+library(shinycssloaders)
+# install.packages("shinycssloaders")
 
 ui <- fluidPage(
+  shinyjs::useShinyjs(), 
+
+
+  tags$head(
+    tags$style(HTML("
+      .fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+        background-color: white;
+        padding: 20px;
+        overflow: auto;
+      }
+      .float-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10000;
+      }
+    "))
+  ),
+
+  
   titlePanel("CLS Analyseplattform"),
   
   sidebarLayout(
@@ -48,20 +76,28 @@ ui <- fluidPage(
                   ),
       
       selectInput("linkage", "Linkage criterion...",
-                  choices = c("Single Linkage", "Complete Linkage", "Average Linkage")
+                  choices = c("Single Linkage", "Complete Linkage", "free parameter selection")
                   ),
+      fluidRow(
+        column(3, numericInput("alpha_i", "alpha_i:", value = 0.5, step = 0.1)),
+        column(3, numericInput("alpha_j", "alpha_j:", value = 0.5, step = 0.1)),
+        column(3, numericInput("beta", "beta:", value = 0, step = 0.1)),
+        column(3, numericInput("gamma", "gamma:", value = 0.5, step = 0.1))
+      ),
       
       selectInput("clustercrit", "Cluster criterion...",
-                  choices = c("Group by: Patients", "Group by: Genes")
+                  choices = c("Group by: Patients", "Group by: Genes", "Group by: Patients and Genes")
                   ),
       
       
       hr(),
       h4("Visualization Settings"),
+
+      numericInput("n_clusters", "Number of clusters:", value = 3, min = 2, max = 10),
       
-      colourInput("color_low", "Color one", value = "#FF0000"),
-      colourInput("color_high", "Color 2", value = "#008512"),
-      
+      selectInput("colorpattern", "Select Colorpattern...",
+                  choices = c("Rainbow", "Heat", "Topo")
+      ), # Farbpattern 
       
       hr(),
       actionButton("submit", "Submit")
@@ -71,11 +107,87 @@ ui <- fluidPage(
     
     
     mainPanel(
-      h4("Section 2 - Ausgabe")
+      h4("Section 2 - Ausgabe"),
+
+       # Teilbild
+      div(id = "normal_view",
+          div(class = "float-button",
+              actionButton("expand", " + ")
+          ),
+          wellPanel(
+            h5("Teilbild"),
+            withSpinner(textOutput("test_result_normal"), type = 6),
+          )
+      ),
+      
+      # Vollbild
+      hidden(
+        div(id = "fullscreen_view", class = "fullscreen",
+            div(class = "float-button",
+                actionButton("collapse", " - ")
+            ),
+            h3("Vollbild"),
+            withSpinner(textOutput("test_result_fullscreen"), type = 6),
+        )
+      )
+      
     )
   )
 )
 server <- function (input, output, session) {
+  
+  observe({  # Eingabe der Parameter nur bei freier Parameterwahl erlauben
+    if (input$linkage == "Complete Linkage") {
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0.5)
+      updateNumericInput(session, "alpha_j", value = 0.5)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = -0.5)
+    } else if (input$linkage == "Single Linkage"){
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0.5)
+      updateNumericInput(session, "alpha_j", value = 0.5)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = 0.5)
+    } else {
+      shinyjs::enable("alpha_i")
+      shinyjs::enable("alpha_j")
+      shinyjs::enable("beta")
+      shinyjs::enable("gamma")
+    }
+  })
+
+
+  # Umstellung zwischen Vollbildschirm und Teilbildschirm
+  observeEvent(input$expand, {
+    hide("normal_view")
+    show("fullscreen_view")
+  })
+  
+  observeEvent(input$collapse, {
+    hide("fullscreen_view")
+    show("normal_view")
+  })
+  
+  
+  # Ladeanzeige
+  observeEvent(input$submit, {
+    output$test_result_normal <- renderText({""})
+    output$test_result_fullscreen <- renderText({""})
+    
+    Sys.sleep(5)  # simulierte Ladezeit
+    
+    output$test_result_normal <- renderText({"Test erfolgreich"})
+    output$test_result_fullscreen <- renderText({"Test erfolgreich"})
+  })
   
 }
 
