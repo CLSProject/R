@@ -1,3 +1,6 @@
+if (! require("dplyr")) {
+  install.packages("dplyr")
+}
 library(dplyr)
 
 
@@ -33,12 +36,6 @@ read_patient_data_csv <- function(file_name) {
 
 ###
 # testing for special cases
-check_for_missing_data <- function(data) {
-  if (any(is.na(data))) {
-    return(TRUE)
-  }
-  FALSE
-}
 check_for_only_numeric_data <- function(data) {
   if (any(sapply(data, is.numeric))) {
     return(TRUE)
@@ -80,5 +77,3 @@ get_processed_patient_data <- function(file_name = "") {
 
   list(patient_data_matrix, patient_data_labels)
 }
-
-
