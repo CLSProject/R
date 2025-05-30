@@ -1,8 +1,35 @@
 library(shiny)
 library(shinyjs)
+library(shinycssloaders)
+# install.packages("shinycssloaders")
 
 ui <- fluidPage(
   shinyjs::useShinyjs(), 
+
+
+  tags$head(
+    tags$style(HTML("
+      .fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+        background-color: white;
+        padding: 20px;
+        overflow: auto;
+      }
+      .float-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10000;
+      }
+    "))
+  ),
+
+  
   titlePanel("CLS Analyseplattform"),
   
   sidebarLayout(
@@ -65,6 +92,8 @@ ui <- fluidPage(
       
       hr(),
       h4("Visualization Settings"),
+
+      numericInput("n_clusters", "Number of clusters:", value = 3, min = 2, max = 10),
       
       selectInput("colorpattern", "Select Colorpattern...",
                   choices = c("Rainbow", "Heat", "Topo")
@@ -78,7 +107,30 @@ ui <- fluidPage(
     
     
     mainPanel(
-      h4("Section 2 - Ausgabe")
+      h4("Section 2 - Ausgabe"),
+
+       # Teilbild
+      div(id = "normal_view",
+          div(class = "float-button",
+              actionButton("expand", " + ")
+          ),
+          wellPanel(
+            h5("Teilbild"),
+            withSpinner(textOutput("test_result_normal"), type = 6),
+          )
+      ),
+      
+      # Vollbild
+      hidden(
+        div(id = "fullscreen_view", class = "fullscreen",
+            div(class = "float-button",
+                actionButton("collapse", " - ")
+            ),
+            h3("Vollbild"),
+            withSpinner(textOutput("test_result_fullscreen"), type = 6),
+        )
+      )
+      
     )
   )
 )
@@ -112,6 +164,31 @@ server <- function (input, output, session) {
       shinyjs::enable("gamma")
     }
   })
+
+
+  # Umstellung zwischen Vollbildschirm und Teilbildschirm
+  observeEvent(input$expand, {
+    hide("normal_view")
+    show("fullscreen_view")
+  })
+  
+  observeEvent(input$collapse, {
+    hide("fullscreen_view")
+    show("normal_view")
+  })
+  
+  
+  # Ladeanzeige
+  observeEvent(input$submit, {
+    output$test_result_normal <- renderText({""})
+    output$test_result_fullscreen <- renderText({""})
+    
+    Sys.sleep(5)  # simulierte Ladezeit
+    
+    output$test_result_normal <- renderText({"Test erfolgreich"})
+    output$test_result_fullscreen <- renderText({"Test erfolgreich"})
+  })
+  
 }
 
 shinyApp(ui = ui, server = server)
