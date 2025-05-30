@@ -140,10 +140,18 @@ cluster_both<-function(data,alpha_i,alpha_j,beta,gamma,dist_crit,link_crit=""){
   ))
     
 }
+z_score_norm<-function(x){
+  return ((x-mean(x))/sd(x))
+}
 
 load("TCGA_kidney_unnormalized.RData")
 data=dataset$data
 small_data=data[1:5,1:5]
+
+scaled_data<-t(apply(small_data,1,z_score_norm))
+row_mean=rowMeans(scaled_data)  # sollten ~ 0 sein
+row_sd=apply(scaled_data, 1, sd)
+
 cluster_result<-cluster_both(data=small_data,alpha_i=0.5,alpha_j=0.5,beta=0,gamma=0.5,dist_crit="euclidean",link_crit="UPGMA")
 dist=  dist_mat <- as.matrix(dist((t(small_data)), method = "euclidean"))
 #result_small<-agglomerative_clustering_base_algo(data=small_data,dist=dist,distance_measure="euclidean","single linkage",FALSE,TRUE)

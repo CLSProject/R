@@ -1,0 +1,130 @@
+library(shiny)
+
+# Dummy-Clustering-Funktion (zum Testen)
+cluster_both <- function(data, distance_method = "euclidean", linkage_method = "complete",
+                         alpha_i = 1, alpha_j = 1, beta = 1, gamma = 1) {
+  list(
+    gene_clustering = as.dendrogram(hclust(dist(data, method = distance_method), method = linkage_method)),
+    pat_clustering = as.dendrogram(hclust(dist(t(data), method = distance_method), method = linkage_method))
+  )
+}
+
+# Visualisierung Fkt 
+zeichne_heatmap <- function(daten_matrix, palette_colors, zeilen_dendrogramm = NULL) {
+  zeilen_anzahl <- nrow(daten_matrix)
+  spalten_anzahl <- ncol(daten_matrix)
+  
+  # Min/Max z-transformierten Werten berechnen
+  min_wert <- min(daten_matrix, na.rm = TRUE)
+  max_wert <- max(daten_matrix, na.rm = TRUE)
+  
+  print(paste("Min:", min_wert, "Max:", max_wert)) #Debug
+  
+  layout(matrix(c(1, 2), nrow = 1), widths = c(1.5, 5)) # 1 Dendrogramm links, 2 Heatmap rechts
+  
+  # Dendrogramm links
+  par(mar = c(5, 0, 2, 0))
+  if (!is.null(zeilen_dendrogramm)) {
+    plot(zeilen_dendrogramm, horiz = TRUE, axes = FALSE, main = "", xlab = "", ylab = "")
+  } else {
+    plot.new()
+  }
+  
+  # Heatmap rechts
+  par(mar = c(5, 5, 2, 6))
+  plot(NA, xlim = c(0, spalten_anzahl), ylim = c(0, zeilen_anzahl),
+       xaxt = "n", yaxt = "n", xlab = "", ylab = "", asp = 1, main = "Heatmap")
+  
+  for (i in 1:zeilen_anzahl) {
+    for (j in 1:spalten_anzahl) {
+      wert <- daten_matrix[i, j]
+      farb_index <- round(((wert - min_wert) / (max_wert - min_wert)) * 99) + 1 # normierter Wert auf Farbindex 1-100
+      farb_index <- min(max(farb_index, 1), 100)
+      farbe <- palette_colors[farb_index]
+      rect(j - 1, zeilen_anzahl - i, j, zeilen_anzahl - i + 1, col = farbe, border = "black")
+    }
+  }
+  
+  axis(1, at = 0:(spalten_anzahl - 1) + 0.5, labels = colnames(daten_matrix), las = 2, cex.axis = 0.7)
+  axis(2, at = 0:(zeilen_anzahl - 1) + 0.5, labels = rownames(daten_matrix)[zeilen_anzahl:1], las = 2, cex.axis = 0.7)
+  
+  for (k in 1:100) {
+    rect(xleft = spalten_anzahl + 0.2,
+         ybottom = (k - 1) * zeilen_anzahl / 100,
+         xright = spalten_anzahl + 0.6,
+         ytop = k * zeilen_anzahl / 100,
+         col = palette_colors[k], border = NA)
+  }
+  
+  axis(4, at = seq(0, zeilen_anzahl, length.out = 5),
+       labels = round(seq(min_wert, max_wert, length.out = 5), 2), las = 1)
+  mtext("Werteskala", side = 4, line = 3)
+}
+
+server <- function(input, output, session) {
+  
+  # Daten einlesen 
+  data <- reactive({
+    req(input$file)
+    df <- read.csv(input$file$datapath, header = TRUE, row.names = 1)
+    df <- df[-nrow(df), ]
+    df <- df[, sapply(df, is.numeric)]  # nur numerische Spalten
+    
+    # Z-Transformation 
+    smalldata <- scale(df[1:20,1:20])
+    smalldata
+  })
+  
+  farben_palette <- reactive({
+    if (input$colorpattern == "Rainbow") {
+      colorRampPalette(c("red", "orange", "yellow", "green", "blue", "purple"))(100)
+    } else if (input$colorpattern == "Heat") {
+      colorRampPalette(c("darkred", "red", "orange", "yellow"))(100)
+    } else if (input$colorpattern == "Topo") {
+      colorRampPalette(c("darkgreen", "green", "lightblue", "blue", "darkblue"))(100)
+    } else {
+      colorRampPalette(c("red", "white", "green"))(100)
+    }
+  })
+  
+  clustering <- reactive({
+    cluster_both(
+      data(),
+      distance_method = input$distance,
+      linkage_method = input$linkage,
+      alpha_i = input$alpha_i,
+      alpha_j = input$alpha_j,
+      beta = input$beta,
+      gamma = input$gamma
+    )
+  })
+  
+  output$heatmap_plot <- renderPlot(
+    {
+      df <- data()
+      cluster <- clustering()
+      row_order <- order.dendrogram(cluster$gene_clustering)
+      col_order <- order.dendrogram(cluster$pat_clustering)
+      df <- df[row_order, col_order]
+      zeichne_heatmap(df, farben_palette(), cluster$gene_clustering)
+    },
+    height = 500,
+    width = 800
+  )
+  
+  output$download_plot <- downloadHandler(
+    filename = function() {
+      paste0("Heatmap_", Sys.Date(), ".pdf")
+    },
+    content = function(file) {
+      pdf(file, width = 10, height = 8)
+      df <- data()
+      cluster <- clustering()
+      row_order <- order.dendrogram(cluster$gene_clustering)
+      col_order <- order.dendrogram(cluster$pat_clustering)
+      df <- df[row_order, col_order]
+      zeichne_heatmap(df, farben_palette(), cluster$gene_clustering)
+      dev.off()
+    }
+  )
+}
