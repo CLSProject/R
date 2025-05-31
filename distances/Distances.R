@@ -11,8 +11,8 @@ cat("S3Class\n")
     movieList <- list(name      = "Iron man",
                       leadActor = "Robert Downey Jr")
     # print(movieList)
-    # show.movie(movieList)
+    show.movie(movieList)
 # give a name to your class
     class(movieList) <- "movie"
     # print(movieList)
-    # show.movie(movieList)
+    show.movie(movieList)

@@ -29,8 +29,13 @@
 
   # distance matrix by stats::dist
     cat("\fdistance matrix by stats::dist\n")
-    dist_mat <- stats::dist(data_mat, method = "euclidian") #, diag = TRUE, upper = TRUE)
+    # dist_mat <- stats::dist(data_mat, method = "euclidian") #, diag = TRUE, upper = TRUE)
+    source("stats_dist.R")
+    dist_mat <- dist(data_mat, method = "euclidian") #, diag = TRUE, upper = TRUE)
     cat("\n")
+    print(dist_mat)
+    myprint.dist(dist_mat)
+    print(as.matrix(dist_mat))
     print_everything(dist_mat)
 
   readline(prompt = "Drücke [Enter], um fortzufahren...")
