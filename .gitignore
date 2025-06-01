@@ -47,3 +47,5 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+/distances/*.Rproj
+/test/templates/manual/*.Rproj
