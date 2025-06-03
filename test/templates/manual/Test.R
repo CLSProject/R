@@ -21,8 +21,8 @@ clear_envrionment <- function() {
     remove_packages()
     clear_envrionment()
     # don't install packages besides test suite in order not to influence script to be tested
-    # preset constants, but be aware they might be overwritten by following loading of scripts
-      A <- 1
+    # define constants and functions, but be aware they might be overwritten by following loading of scripts
+      # A <- 1
     # don't load utility scripts besides script to be tested in order not to influence script to be tested
       source("To_Be_Tested.R")
 
