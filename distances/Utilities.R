@@ -6,7 +6,7 @@ remove_packages <- function() {
       pkgs <- names(sessionInfo()$otherPkgs)
     }
   }
-  remove_all_packages()
+   remove_all_packages()
 }
 
 clear_envrionment <- function() {
