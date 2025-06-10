@@ -20,7 +20,7 @@
     return (distance)
   }
 
-  calculate_euclidian <- function(row_lower_number, row_higher_number) {
+  calculate_euclidean <- function(row_lower_number, row_higher_number) {
     distance <- 0
     for (col_number in 1:ncol(data)) {
       distance <- distance + (data[row_lower_number, col_number] - data[row_higher_number, col_number])^2
