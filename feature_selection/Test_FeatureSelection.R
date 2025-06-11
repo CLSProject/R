@@ -8,6 +8,11 @@ test_file_name <- paste(getwd(),
                         "/feature_selection/data",
                         "/Colon_vs_Pancreas_selected.csv",
                         sep = "", collapse = "")
+# large CSV file
+test_file_name_large <- paste(getwd(),
+                              "/feature_selection/data",
+                              "/TCGA_kidney_unnormalized.csv",
+                              sep = "", collapse = "")
 
 # example gene ids (KEGG results)
 test_gene_ids <- c(5406, 4602, 3630, 10223, 27035, 10000, 10023)
@@ -45,8 +50,8 @@ test_limit <- 4
 
 ###
 # reading CSV file
-test_reading_in_example <- function() {
-  test_data_results <- get_processed_patient_data(test_file_name)
+test_reading_in_example <- function(file_name) {
+  test_data_results <- get_processed_patient_data(file_name)
   print("[Dimension] Data matrix of example")
   print(dim(test_data_results[[1]]))
   print("[Length] Labels of example")
@@ -57,7 +62,11 @@ test_reading_in_example <- function() {
 # testing
 execute_test_reading_in <- readline("Test reading in CSV file? (y|n) ")
 if (tolower(execute_test_reading_in) == "y") {
-  test_reading_in_example()
+  print("Basic reading in")
+  test_reading_in_example(test_file_name)
+
+  # print("Reading in large CSV")
+  # test_reading_in_example(test_file_name_large)
 }
 
 
@@ -83,12 +92,31 @@ test_selection <- function(file_name, gen_ids, limit = 0) {
 # testing
 execute_feature_selection <- readline("Test complete feature selection? (y|n) ")
 if (tolower(execute_feature_selection) == "y") {
-  print("basic feature selection")
+  print("Basic feature selection")
   test_selection(test_file_name, test_gene_ids)
 
-  print("actual feature selection with missing gen ids")
+  print("Actual feature selection with missing gen ids")
   test_selection(test_file_name, test_gene_ids_missing)
 
-  print("actual feature selection with limit of gen ids")
+  print("Actual feature selection with limit of gen ids")
   test_selection(test_file_name, test_gene_ids_missing, test_limit)
+}
+# with large input data
+# execute_feature_selection_large <- readline("Test feature selection on large CSV? (y|n) ") # nolint: line_length_linter.
+# if (tolower(execute_feature_selection_large) == "y") {
+#   print("Feature selection on large data")
+#   test_selection(test_file_name_large, test_gene_ids)
+# }
+
+
+
+###
+# duplicated ids in patient data CSV
+execute_show_duplicated_ids <- readline("Show problem with duplicated ids? (y|n) ") # nolint: line_length_linter.
+if (tolower(execute_show_duplicated_ids) == "y") {
+  dup_ids_data <- read.csv(test_file_name_large)
+  occurr_dup_ids_all <- table(dup_ids_data[, 1])
+  occurr_dup_ids <- occurr_dup_ids_all[occurr_dup_ids_all > 1]
+  print(length(occurr_dup_ids))
+  print(table(occurr_dup_ids))
 }
