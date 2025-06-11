@@ -50,7 +50,6 @@
     cat("\n\n\n")
     cat("dist by distances script\n")
     cat("\n")
-    try(detach("package:stats", unload = TRUE), silent = TRUE)
     source("Distances.R")
     # create and calculate dist
       distances_time <- system.time(distances <- dist(DATA, method = METHOD, diag = DIAG, upper = UPPER, p = P))
