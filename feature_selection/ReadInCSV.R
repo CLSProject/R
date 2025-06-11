@@ -48,7 +48,7 @@ check_for_only_numeric_data <- function(data) {
 # processing patient data
 expression_ids_as_indizes <- function(data) {
   rownames(data) <- data[, 1]
-  select(data, -1)
+  dplyr::select(data, -1)
 }
 
 
