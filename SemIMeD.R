@@ -6,17 +6,19 @@
   # clear envrionment
     rm(list = ls(envir = .GlobalEnv), envir = .GlobalEnv)
   # define constants and functions, but be aware they might be overwritten by following loading of scripts
+    # set working directory
+      if (!require(this.path)) install.packages("this.path")
+      library(this.path)
+      setwd(dirname(this.path()))
     # create dummy data
-      DATA <- matrix(c( 1,  0,  3,  4
-                      , 5,  6,  0,  8
-                      , 9,  0, 11,  0
-                      )
-                     ,ncol     = 4
-                     ,byrow    = TRUE
-                     ,dimnames = list(c("Zeile 1",  "Zeile 2",  "Zeile 3")
-                                     ,c("Spalte 1", "Spalte 2", "Spalte 3", "Spalte 4")
-                                     )
-                     )
+      load("./clustern/TCGA_kidney_unnormalized.RData")
+      DATA   <- dataset$data[1:300, 1:100]
+      if (!require(stats)) install.packages("stats")
+      library(stats)
+      METHOD <- "euclidean"
+      DIAG   <- FALSE
+      UPPER  <- TRUE
+      P      <-           3
     # define dummy parameters
       ALPHA_I   <-         0.5
       ALPHA_J   <-         0.5
@@ -24,10 +26,6 @@
       GAMMA     <-         0.0
       DIST_CRIT <- "euclidean"
       LINK_CRIT <-          ""
-    # set working directory
-      if (!require(this.path)) install.packages("this.path")
-      library(this.path)
-      setwd(dirname(this.path()))
 
   # remove_packages
     pkgs <- names(sessionInfo()$otherPkgs)
@@ -37,29 +35,28 @@
     }
   # don't install packages as modules should bring there needs with themselves
 
+  # don't load utility scripts besides script to be tested in order not to influence script to be tested
+
+
 
 
 # call sequentially modules
   cat("\f")
 
   # calculate distance matrixes and cluster informations for both dimensions
-    try(detach("package:stats", unload = TRUE), silent = TRUE)
-    source("distances/Distances.R")
-    source("clustern/clustering_base_algo.R")
-    clust <- cluster_both(data = DATA
-                         ,alpha_i = ALPHA_I, alpha_j = ALPHA_J, beta = BETA, gamma = GAMMA
-                         ,dist_crit = DIST_CRIT, link_crit = LINK_CRIT)
-
-    print(class(clust))
-    print(typeof(clust))
-    print(str(clust))
-
-    print(class(clust[1]))
-    print(typeof(clust[1]))
-    print(str(clust[1]))
-    plot(clust[1])
-
-    print(class(clust[2]))
-    print(typeof(clust[2]))
-    print(str(clust[2]))
-    plot(as.dendrogram(clust[2]))
+    # source("./distances/Distances.R")
+    dist_duration <- system.time({
+      dist_pat  <- as.matrix(dist((t(DATA)), method = METHOD))
+      dist_gene <- as.matrix(dist(   DATA,   method = METHOD))
+    })
+    print(dist_duration)
+  # calculate cluster informations for both dimensions
+    source("./clustern/clustering_base_algo.R")
+    clust_duration <- system.time(clust <- cluster_both(dist_pat, dist_gene
+                                                       ,alpha_i = ALPHA_I, alpha_j = ALPHA_J, beta = BETA, gamma = GAMMA
+                                                       ,dist_crit = DIST_CRIT, link_crit = LINK_CRIT
+                                                       )
+                                 )
+    print(clust_duration)
+    plot(clust[[1]])
+    plot(as.dendrogram(clust[[2]]))
