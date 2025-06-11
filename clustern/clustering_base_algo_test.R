@@ -20,6 +20,7 @@
         lapply(pkgs, function(pkg) detach(paste0("package:", pkg), unload = TRUE, character.only = TRUE))
         pkgs <- names(sessionInfo()$otherPkgs)
       }
+      try(detach("package:stats", unload = TRUE), silent = TRUE)
     METHOD <- "euclidean"
     DIAG   <- FALSE
     UPPER  <- TRUE
@@ -29,17 +30,7 @@
 
 
 
-# execute test
-
-  # cluster by stats package
-    cat("\fcluster by stats package\n")
-    if (!require(stats)) install.packages("stats")
-    library(stats)
-    stats_clust <- hclust(STATS_DIST)
-    print(str(stats_clust))
-    plot(as.dendrogram(stats_clust))
-    plot(stats_clust)
-    cat("\n")
+# execute tests
 
   # cluster by script
     cat("\n\n\ncluster by clustering base algo script\n")
@@ -49,8 +40,17 @@
                                                       ,link_crit=""
                                                       )
     print(str(script_clust))
-    plot(as.dendrogram(script_clust))
     plot(script_clust)
+    cat("\n")
+
+  # cluster by stats package
+    cat("\fcluster by stats package\n")
+    if (!require(stats)) install.packages("stats")
+    library(stats)
+    stats_clust <- hclust(STATS_DIST)
+    print(str(stats_clust))
+    plot(as.dendrogram(stats_clust))
+    plot(stats_clust)
     cat("\n")
 
   # compare results
