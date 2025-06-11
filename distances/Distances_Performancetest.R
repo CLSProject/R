@@ -78,8 +78,8 @@
     }
     cat("\n")
     if (identical(as.vector(stats_dist), as.vector(distances))) {
-      print("Precission Test PASSED")
+      print("Precision Test PASSED")
     } else {
-      print("Precission Test FAILED")
+      print("Precision Test FAILED")
       stop()
     }
