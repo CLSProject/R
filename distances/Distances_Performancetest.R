@@ -14,7 +14,7 @@
 
 
 
-    METHOD <- "euclidian"
+    METHOD <- "euclidean"
     DIAG   <- FALSE
     UPPER  <- TRUE
     P      <-           3

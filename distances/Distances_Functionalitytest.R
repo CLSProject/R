@@ -14,7 +14,7 @@
                                      ,c("Spalte 1", "Spalte 2", "Spalte 3", "Spalte 4")
                                      )
                      )
-    METHOD <- "euclidian"
+    METHOD <- "euclidean"
     DIAG   <- FALSE
     UPPER  <- TRUE
     P      <-           3
