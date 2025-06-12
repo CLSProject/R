@@ -1,3 +1,4 @@
+library(stats)
 getOrder_dfs<-function(merge){
   root<-nrow(merge)
   order<-c()
@@ -99,8 +100,6 @@ agglomerative_clustering_base_algo<-function(dist,alpha_i=0.5,alpha_j=0.5,beta=0
         new_dists<-matrix(0,nrow=length(clusters),ncol=length(clusters))
         colnames(new_dists)<-names(clusters)
         rownames(new_dists)<-names(clusters)
-        #new_dists[nrow(new_dists),1:(ncol(new_dists)-1)]<-new_distances
-        #new_dists[1:(nrow(new_dists)-1),ncol(new_dists)]<-new_distances
         new_dists[k, names(new_distances)] <- new_distances
         new_dists[names(new_distances), k] <- new_distances
         if (is.matrix(dist) && nrow(dist) > 0 && ncol(dist) > 0){
@@ -156,33 +155,3 @@ calc_params_flexible<-function(beta){
   return(c(alpha_i = alpha_i, alpha_j = alpha_j, beta = beta, gamma = gamma))
 }
 
-load("TCGA_kidney_unnormalized.RData")
-data=dataset$data
-small_data=data[1:5,1:5]
-#Beispielaufruf für Normierungen
-scaled_data<-t(apply(small_data,1,z_score_norm))
-scaled_data <- t(apply(small_data, 1, min_max_scale))
-#beispiel UPGMA
-#cluster_result<-cluster_both(data=small_data,alpha_i=0.5,alpha_j=0.5,beta=0,gamma=0.5,dist_crit="euclidean",link_crit="UPGMA")
-dist=  dist_mat <- as.matrix(dist((t(small_data)), method = "euclidean"))
-#merge=result_small$merge
-dist<-c(0,1,2,9,13,1,0,5,10,10,2,5,0,5,13,9,10,5,0,4,13,10,13,4,0)
-dim(dist)<-c(5,5)
-#beispiel berechnung parameter für flexible strategie und funktionsaufruf 
-params=calc_params_flexible(beta=0.98)
-#Mit distanzmatrix
-result_flexible<-agglomerative_clustering_base_algo(dist=dist,alpha_i=params["alpha_i"],
-                                                    alpha_j=params["alpha_j"],
-                                                    beta=params["beta"],
-                                                    gamma=params["gamma"])
-#auf normierten gendaten, in beide richtungen clustern
-result_flexible_both=cluster_both(scaled_data,alpha_i=params["alpha_i"],
-                                  alpha_j=params["alpha_j"],
-                                  beta=params["beta"],
-                                  gamma=params["gamma"],dist_crit="euclidean")
-result_upgma<-agglomerative_clustering_base_algo(dist=dist,link_crit="UPGMA")
-hcl_upgma<-hclust(as.dist(dist), method="average",members=NULL)
-hcl_test<-hclust(as.dist(dist), method="single",members=NULL)
-hcl_complete<-hclust(as.dist(dist),method="complete",members=NULL)
-merge_hclust<-hcl_test$merge
-hcl_small<-hclust(dist(t(small_data)), method="single",members=NULL)
