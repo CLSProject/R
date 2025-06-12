@@ -40,23 +40,27 @@
 
 
 
-# call sequentially modules
-  cat("\f")
+# call modules sequentially
 
   # calculate distance matrixes and cluster informations for both dimensions
+    cat("\fDistance calculation\n")
     source("./distances/Distances.R")
     dist_duration <- system.time({
-      dist_pat  <- as.matrix(dist((t(DATA)), method = METHOD))
-      dist_gene <- as.matrix(dist(   DATA,   method = METHOD))
+      dist_pat  <- dist((t(DATA)), method = METHOD)
+      dist_gene <- dist(   DATA,   method = METHOD)
     })
+    cat("Duration of calculation on patients and on genes: \n")
     print(dist_duration)
+
   # calculate cluster informations for both dimensions
+    cat("\nCluster calculation\n")
     source("./clustern/clustering_base_algo.R")
-    clust_duration <- system.time(clust <- cluster_both(dist_pat, dist_gene
+    clust_duration <- system.time(clust <- cluster_both(as.matrix(dist_pat), as.matrix(dist_gene)
                                                        ,alpha_i = ALPHA_I, alpha_j = ALPHA_J, beta = BETA, gamma = GAMMA
                                                        ,link_crit = LINK_CRIT
                                                        )
                                  )
+    cat("Duration of calucation on patients and on genes: \n")
     print(clust_duration)
     # plot(clust[[1]])
     plot(as.dendrogram(clust[[2]]))
