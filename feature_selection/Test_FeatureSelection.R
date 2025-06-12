@@ -50,33 +50,39 @@ test_limit <- 4
 
 ###
 # reading CSV file
-test_reading_in_example <- function(file_name) {
+test_reading_in_example <- function(file_name, print_gid = FALSE) {
   test_data_results <- get_processed_patient_data(file_name)
   print("[Dimension] Data matrix of example")
   print(dim(test_data_results[[1]]))
   print("[Length] Labels of example")
   print(length(test_data_results[[2]]))
+  print("[Length] Gen ids of example")
+  print(length(test_data_results[[3]]))
+  if (print_gid) {
+    print(test_data_results[[3]])
+  }
 }
 
 
 # testing
 execute_test_reading_in <- readline("Test reading in CSV file? (y|n) ")
 if (tolower(execute_test_reading_in) == "y") {
-  print("Basic reading in")
-  test_reading_in_example(test_file_name)
+  cat("\nBasic reading in")
+  test_reading_in_example(test_file_name, print_gid = TRUE)
 
-  # print("Reading in large CSV")
-  # test_reading_in_example(test_file_name_large)
+  cat("\nReading in large CSV")
+  test_reading_in_example(test_file_name_large)
 }
 
 
 
 ###
 # actual feature selection
-test_selection <- function(file_name, gen_ids, limit = 0) {
+test_selection <- function(file_name, query_gen_ids, limit = 0, print_gid = FALSE) { # nolint: line_length_linter.
   test_data_results <- get_processed_patient_data(file_name)
   test_selection_results <- get_filtered_matrix_genes(test_data_results[[1]],
-                                                      gen_ids,
+                                                      test_data_results[[3]],
+                                                      query_gen_ids,
                                                       limit)
   print("[Length] Labels of example")
   print(length(test_data_results[[2]]))
@@ -84,29 +90,37 @@ test_selection <- function(file_name, gen_ids, limit = 0) {
   print(dim(test_data_results[[1]]))
   print("[Dimension] Data matrix of example")
   print(dim(test_selection_results[[1]]))
-  print("[Length] Filtered genes of example")
+  print("[Length] Filtered query genes of example")
+  print(length(test_selection_results[[3]]))
+  print("[Length] Gen ids of example")
+  print(length(test_data_results[[3]]))
+  print("[Length] Filtered gen ids of example")
   print(length(test_selection_results[[2]]))
+  if (print_gid) {
+    print(test_data_results[[3]])
+  }
+  print(test_selection_results[[2]])
 }
 
 
 # testing
 execute_feature_selection <- readline("Test complete feature selection? (y|n) ")
 if (tolower(execute_feature_selection) == "y") {
-  print("Basic feature selection")
-  test_selection(test_file_name, test_gene_ids)
+  cat("\nBasic feature selection")
+  test_selection(test_file_name, test_gene_ids, print_gid = TRUE)
 
-  print("Actual feature selection with missing gen ids")
-  test_selection(test_file_name, test_gene_ids_missing)
+  cat("\nActual feature selection with missing gen ids")
+  test_selection(test_file_name, test_gene_ids_missing, print_gid = TRUE)
 
-  print("Actual feature selection with limit of gen ids")
-  test_selection(test_file_name, test_gene_ids_missing, test_limit)
+  cat("\nActual feature selection with limit of gen ids")
+  test_selection(test_file_name, test_gene_ids_missing, test_limit, print_gid = TRUE) # nolint: line_length_linter.
 }
 # with large input data
-# execute_feature_selection_large <- readline("Test feature selection on large CSV? (y|n) ") # nolint: line_length_linter.
-# if (tolower(execute_feature_selection_large) == "y") {
-#   print("Feature selection on large data")
-#   test_selection(test_file_name_large, test_gene_ids)
-# }
+execute_feature_selection_large <- readline("Test feature selection on large CSV? (y|n) ") # nolint: line_length_linter.
+if (tolower(execute_feature_selection_large) == "y") {
+  cat("\nFeature selection on large data")
+  test_selection(test_file_name_large, test_gene_ids)
+}
 
 
 
