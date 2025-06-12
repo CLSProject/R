@@ -44,7 +44,7 @@
   cat("\f")
 
   # calculate distance matrixes and cluster informations for both dimensions
-    # source("./distances/Distances.R")
+    source("./distances/Distances.R")
     dist_duration <- system.time({
       dist_pat  <- as.matrix(dist((t(DATA)), method = METHOD))
       dist_gene <- as.matrix(dist(   DATA,   method = METHOD))
@@ -54,9 +54,9 @@
     source("./clustern/clustering_base_algo.R")
     clust_duration <- system.time(clust <- cluster_both(dist_pat, dist_gene
                                                        ,alpha_i = ALPHA_I, alpha_j = ALPHA_J, beta = BETA, gamma = GAMMA
-                                                       ,dist_crit = DIST_CRIT, link_crit = LINK_CRIT
+                                                       ,link_crit = LINK_CRIT
                                                        )
                                  )
     print(clust_duration)
-    plot(clust[[1]])
+    # plot(clust[[1]])
     plot(as.dendrogram(clust[[2]]))

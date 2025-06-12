@@ -33,24 +33,25 @@
 # execute tests
 
   # cluster by script
-    cat("\n\n\ncluster by clustering base algo script\n")
+    cat("\fcluster by clustering base algo script\n")
     source("clustering_base_algo.R")
     script_clust <- agglomerative_clustering_base_algo(as.matrix(STATS_DIST)
                                                       ,alpha_i=0.5,alpha_j=0.5,beta=0,gamma=0.5
                                                       ,link_crit=""
                                                       )
     print(str(script_clust))
-    plot(script_clust)
+    # plot(script_clust)
+    # plot(as.dendrogram(stats_clust))
     cat("\n")
 
   # cluster by stats package
-    cat("\fcluster by stats package\n")
+    cat("\n\n\ncluster by stats package\n")
     if (!require(stats)) install.packages("stats")
     library(stats)
     stats_clust <- hclust(STATS_DIST)
     print(str(stats_clust))
-    plot(as.dendrogram(stats_clust))
     plot(stats_clust)
+    plot(as.dendrogram(stats_clust))
     cat("\n")
 
   # compare results
