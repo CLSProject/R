@@ -63,7 +63,7 @@ get_processed_patient_data <- function(file_name = "") {
 
   # extracting gen ids
   patient_data_genids <- patient_data[, 1]
-  patient_data <- select(patient_data, -1)
+  patient_data <- dplyr::select(patient_data, -1)
 
   # converting to matrix
   patient_data_matrix <- convert_to_matrix(patient_data)
