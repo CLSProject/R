@@ -45,19 +45,6 @@ check_for_only_numeric_data <- function(data) {
 
 
 ###
-# processing patient data
-expression_ids_as_indizes <- function(data) {
-  rownames(data) <- data[, 1]
-  select(data, -1)
-}
-
-
-extract_labels <- function(data) {
-  # extracting labels
-  c(data["labels", ])
-}
-
-
 convert_to_matrix <- function(data) {
   # dropping labels from patient data
   data <- data[rownames(data) != "labels", ]
@@ -68,12 +55,18 @@ convert_to_matrix <- function(data) {
 
 get_processed_patient_data <- function(file_name = "") {
   patient_data <- read_patient_data_csv(file_name)
-  patient_data <- expression_ids_as_indizes(patient_data)
 
   # extracting labels
-  patient_data_labels <- extract_labels(patient_data)
+  patient_data_labels <- c(patient_data[patient_data[, 1] == "labels",
+                                        2:ncol(patient_data)])
+  patient_data <- patient_data[-nrow(patient_data), ]
+
+  # extracting gen ids
+  patient_data_genids <- patient_data[, 1]
+  patient_data <- select(patient_data, -1)
+
   # converting to matrix
   patient_data_matrix <- convert_to_matrix(patient_data)
 
-  list(patient_data_matrix, patient_data_labels)
+  list(patient_data_matrix, patient_data_labels, patient_data_genids)
 }
