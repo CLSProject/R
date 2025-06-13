@@ -1,22 +1,26 @@
 source("feature_selection/ReadInCSV.R")
 source("feature_selection/SelectFeaturesData.R")
+source("normalization/Normalization.R")
 
 
 # !!!
 # check if this path works! depends on the working directory
 # !!!
 file_name_example <- "feature_selection/data/Colon_vs_Pancreas_selected.csv"
+file_name_example_unnormalized <- "feature_selection/data/TCGA_kidney_unnormalized.csv" # nolint: line_length_linter.
 
 # example gene ids (KEGG results)
-test_gene_ids <- c(5406, 4602, 3630, 10223, 27035, 10000, 10023)
-names(test_gene_ids) <- c(
+test_gene_ids_missing <- c(5406, 4602, 3630, 0, 10223, 27035, 10000, 0, 10023)
+names(test_gene_ids_missing) <- c(
   "pancreatic triacylglycerol lipase",
   "transcriptional activator Myb",
   "insulin",
+  "missing gen id 1", # missing
   "cell surface A33 antigen",
   "NADPH oxidase 1",
   # not in patient data example
   "AKT serine/threonine kinase 3",
+  "missing gen id 2", # missing
   "FRAT regulator of WNT signaling pathway 1"
 )
 
@@ -26,10 +30,25 @@ get_example_data <- function() {
   results_read_in <- get_processed_patient_data(file_name_example)
   results_selected <- get_filtered_matrix_genes(results_read_in[[1]],
                                                 results_read_in[[3]],
-                                                test_gene_ids)
+                                                test_gene_ids_missing)
   list(
     results_read_in[[2]], # labels
     results_selected[[1]], # matrix patient data after feature selection
+    results_selected[[3]], # gen ids from matrix patient data (mapping to rows in matrix) # nolint: line_length_linter.
+    results_selected[[2]] # query gen ids & names used for feature selection
+  )
+}
+
+
+get_example_data_from_unnormalized <- function() {
+  results_read_in <- get_processed_patient_data(file_name_example_unnormalized)
+  results_selected <- get_filtered_matrix_genes(results_read_in[[1]],
+                                                results_read_in[[3]],
+                                                test_gene_ids_missing)
+  results_selected_matrix <- z_score_norm(results_selected[[1]])
+  list(
+    results_read_in[[2]], # labels
+    results_selected_matrix, # matrix patient data after feature selection
     results_selected[[3]], # gen ids from matrix patient data (mapping to rows in matrix) # nolint: line_length_linter.
     results_selected[[2]] # query gen ids & names used for feature selection
   )
