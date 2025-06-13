@@ -140,12 +140,8 @@ cluster_both<-function(dist_pat,dist_gene,alpha_i,alpha_j,beta,gamma,link_crit="
   ))
 
 }
-z_score_norm<-function(x){
-  return ((x-mean(x))/sd(x))
-}
-min_max_scale <- function(x) {
-  (x - min(x)) / (max(x) - min(x))
-}
+
+
 calc_params_flexible<-function(beta){
   alphas<-1-beta
   alpha_i=alpha_j=alphas/2
