@@ -25,10 +25,12 @@ names(test_gene_ids) <- c(
 get_example_data <- function() {
   results_read_in <- get_processed_patient_data(file_name_example)
   results_selected <- get_filtered_matrix_genes(results_read_in[[1]],
+                                                results_read_in[[3]],
                                                 test_gene_ids)
   list(
     results_read_in[[2]], # labels
     results_selected[[1]], # matrix patient data after feature selection
-    results_selected[[2]] # gen ids & names used for feature selection
+    results_selected[[3]], # gen ids from matrix patient data (mapping to rows in matrix) # nolint: line_length_linter.
+    results_selected[[2]] # query gen ids & names used for feature selection
   )
 }
