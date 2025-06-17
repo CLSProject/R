@@ -33,5 +33,8 @@ get_filtered_matrix_genes <- function(data, data_gen_ids, query_gen_ids, limit =
   data_filtered <- data[mask_gen_ids, ]
   query_gen_ids <- query_gen_ids[query_gen_ids %in% data_gen_ids_filtered]
 
+  # changing row names to correspond to the gen ids
+  rownames(data_filtered) <- as.character(1:nrow(data_filtered))
+
   list(data_filtered, data_gen_ids_filtered, query_gen_ids)
 }
