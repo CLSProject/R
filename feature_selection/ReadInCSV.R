@@ -27,7 +27,9 @@ read_patient_data_csv <- function(file_name) {
   # # most recent CSV file
   # latest_csv_file_name <- rownames(info_dir_csv_files)[which.max(info_dir_csv_files$mtime)] # nolint: line_length_linter.
   if (file_test("-r", file_name)) {
-    read.csv(file_name)
+    data <- read.csv(file_name)
+    # dropping all rows with NA values
+    na.omit(data)
   } else {
     NULL
   }
@@ -36,12 +38,12 @@ read_patient_data_csv <- function(file_name) {
 
 ###
 # testing for special cases
-check_for_only_numeric_data <- function(data) {
-  if (any(sapply(data, is.numeric))) {
-    return(TRUE)
-  }
-  FALSE
-}
+# check_for_only_numeric_data <- function(data) {
+#   if (any(sapply(data, is.numeric))) {
+#     return(TRUE)
+#   }
+#   FALSE
+# }
 
 
 ###
@@ -57,9 +59,16 @@ get_processed_patient_data <- function(file_name = "") {
   patient_data <- read_patient_data_csv(file_name)
 
   # extracting labels
-  patient_data_labels <- c(patient_data[patient_data[, 1] == "labels",
+  label_col_idx <- grep("label", patient_data[, 1], ignore.case = TRUE)
+  patient_data_labels <- c(patient_data[label_col_idx,
                                         2:ncol(patient_data)])
-  patient_data <- patient_data[-nrow(patient_data), ]
+  if (length(patient_data_labels) == 0) {
+    # if no labels are included
+    patient_data_labels <- NULL
+  } else {
+    # dropping the label rows
+    patient_data <- patient_data[-label_col_idx, ]
+  }
 
   # extracting gen ids
   patient_data_genids <- patient_data[, 1]

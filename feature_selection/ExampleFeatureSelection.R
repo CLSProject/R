@@ -34,8 +34,8 @@ get_example_data <- function() {
   list(
     results_read_in[[2]], # labels
     results_selected[[1]], # matrix patient data after feature selection
-    results_selected[[3]], # gen ids from matrix patient data (mapping to rows in matrix) # nolint: line_length_linter.
-    results_selected[[2]] # query gen ids & names used for feature selection
+    results_selected[[2]], # gen ids from matrix patient data (mapping to rows in matrix) # nolint: line_length_linter.
+    results_selected[[3]] # query gen ids & names used for feature selection
   )
 }
 
@@ -49,7 +49,7 @@ get_example_data_from_unnormalized <- function() {
   list(
     results_read_in[[2]], # labels
     results_selected_matrix, # matrix patient data after feature selection
-    results_selected[[3]], # gen ids from matrix patient data (mapping to rows in matrix) # nolint: line_length_linter.
-    results_selected[[2]] # query gen ids & names used for feature selection
+    results_selected[[2]], # gen ids from matrix patient data (mapping to rows in matrix) # nolint: line_length_linter.
+    results_selected[[3]] # query gen ids & names used for feature selection
   )
 }
