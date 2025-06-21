@@ -7,7 +7,8 @@
   # setwd(dirname(this.path()))
   # source("Utilities.R")
 
-
+#Auch hier Input und Output nochmal definieren, ALg Parameter werden ja in der GUI abgefragt, aber bisher nicht gespeichert
+#Test soweit iO aber muss nochmal getestet werden nach Integration 
 
 # construct dist
   dist <- function(data, method = "euclidean", diag = FALSE, upper = FALSE, p = 2) {

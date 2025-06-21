@@ -5,15 +5,17 @@ library(clusterProfiler)
 library(org.Hs.eg.db)
 if (!requireNamespace("KEGGREST", quietly = TRUE)) install.packages("KEGGREST")
 library(KEGGREST)
-kegg_pathway_names <- keggList("pathway", "hsa")
+kegg_pathway_names <- keggList("pathway", "hsa") #this works, it returns a list of all available human pathways
+#why does this retrieve all human pathways and not just the one for the hsa ID which is selected by the User via the GUI?
 
 
 
-pathway2gene_df <- kegg2gene$KEGGPATHID2EXTID
+pathway2gene_df <- kegg2gene$KEGGPATHID2EXTID #creates error: kegg2gene not found - is there a library or something missing?
 pathway2name_df <- kegg2gene$KEGGPATHID2NAME
 
 # 2. Your Entrez IDs
-your_entrez_ids <- rownames(for_retreiving[[1]])
+your_entrez_ids <- rownames(for_retreiving[[1]]) #where does this come from? for_retrieving is not defined anywhere
+#are these the IDs which are taken from the CSV which are uploaded by the user? 
 
 # Create a list: pathway ID -> all genes in that pathway
 pathway_to_genes <- split(pathway2gene_df$to, pathway2gene_df$from)
@@ -55,29 +57,3 @@ pathway_names <- setNames(pathway2name_df$to, pathway2name_df$from)
 
 
 #print(genes)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

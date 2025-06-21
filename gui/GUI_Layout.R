@@ -41,7 +41,7 @@ ui <- fluidPage(
       
       selectInput("disease", "Select disease (1 out of 24)...", 
                   choices = c(
-                    "GSE1297 – Alzheimer's Disease – Hippocampal CA1" = "GSE1297",
+                    "GSE1297 – Alzheimer's Disease – Hippocampal CA1" = "GSE1297", #wird die Auswahl irgendwo gespeichert? Wir sollten ggf. auch die hsa IDs irgendwo mappen, als Input für Aviv und Lucy
                     "GSE5281 – Alzheimer's Disease – Entorhinal Cortex" = "GSE5281_1",
                     "GSE5281 – Alzheimer's Disease – Hippocampus" = "GSE5281_2",
                     "GSE5281 – Alzheimer's Disease – Visual Cortex" = "GSE5281_3",
