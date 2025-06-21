@@ -1,9 +1,9 @@
 library(shiny)
-source("feature_selection/ReadInCSV.R")
-source("feature_selection/SelectFeaturesData.R")
-source("feature_selection/Normalization.R")
+source("ReadInCSV.R")
+source("SelectFeaturesData.R")
+source("Normalization.R")
 
-source("clustern/clustering_base_algo.R") 
+source("clustering_base_algo.R") 
 if (!exists("cluster_both")) stop("Fehler: cluster_both wurde nicht geladen.")
 
 #Dummy-Clustering-Funktion (zum Testen)
@@ -24,6 +24,17 @@ zeichne_heatmap <- function(daten_matrix, palette_colors, zeilen_dendrogramm = N
   spalten_anzahl <- ncol(daten_matrix)
   
   cat("DEBUG: zeichne_heatmap() wurde aufgerufen\n")
+  
+  #Anzahl der Zeilen (Gene) begrenzen falls zu groß
+  daten_matrix <- daten_matrix[1:min(600, nrow(daten_matrix)), ]
+  
+  #falls Labels existieren und gekürzt werden müssen
+  if (!is.null(gene_labels)) {
+    gene_labels <- gene_labels[1:min(600, length(gene_labels))]
+  }
+  
+  zeilen_anzahl <- nrow(daten_matrix)
+  spalten_anzahl <- ncol(daten_matrix)
   
   #Debug-Ausgabe
   cat("DEBUG: Matrixgröße:\n")
@@ -64,6 +75,7 @@ zeichne_heatmap <- function(daten_matrix, palette_colors, zeilen_dendrogramm = N
   
   
   #Heatmap zeichnen (Zelle für Zelle)
+  cat("DEBUG: Schleife über", zeilen_anzahl, "Zeilen\n")#debug: if: Argument hat Länge 0
   for (i in 1:zeilen_anzahl) {
     for (j in 1:spalten_anzahl) {
       farbe_idx <- farben_matrix[i, j]
@@ -149,17 +161,17 @@ graphic_server <- function(input, output, session) {
       return(NULL)
     }
     
+      m<-scale(df) #Normalisierung Test-Fkt
+    ## !!!
+    ## !!! 
+    ## !!! wenn Normalisierung in Normalisierung.R ausgelagert, dann diese Fkt. nutzen !!!
+    ## !!! 
+    # m <- normalized_data(df, input$norm_method, input$clustercrit)
     
-   # Normalization 
-    if (input$norm_method == "Z-Score") {
-      m<- z_score_norm(df)
-    } else if (input$norm_method == "Min-Max") {
-      m<- min_max_scale_norm(df)
-    } else {
-      m<- df  # fallback
-    } 
-    return(m)
-  })
+      return(m)
+     })
+    
+   
   
   #df <- read.csv(file_path, header = TRUE, row.names = 1)
   #cat("DEBUG: Datei gelesen. Dimensionen: ", dim(df), "\n")
@@ -267,12 +279,16 @@ graphic_server <- function(input, output, session) {
     #gen_ids nach Zeilennamen-Strings indexieren
     ids <- gen_info()$geneids
     
-    if (all(rownames(df) %in% as.character(seq_along(ids)))) {
+    with_index <- all(suppressWarnings(!is.na(as.integer(rownames(df)))))
+      
+    if (!with_index) {
+      warning("Nicht alle rownames lassen sich korrekt zu gen_ids mappen!")
       index <- as.integer(rownames(df))
       gene_ids_ordered <- ids[index]
-    }else{
-      gene_ids_ordered<-rownames(df)
+    } else {
+      gene_ids_ordered <- rownames(df)
     }
+    
     
     # labels = die Gene-IDs Index in der Heatmap-Reihenfolge
     gene_labels <- id2name[gene_ids_ordered]
@@ -317,29 +333,6 @@ graphic_server <- function(input, output, session) {
       paste0("Heatmap_", Sys.Date(), ".pdf")
     },
     content = function(file) {
-      # df <- data()
-      # cluster <- clustering()
-      # row_order <- order.dendrogram(cluster$gene_clustering)
-      # col_order <- order.dendrogram(cluster$pat_clustering)
-      # df <- df[row_order, col_order]
-      # 
-      # # Gene-Labels zu gen_info()
-      # info <- gen_info()
-      # # Reihenfolge-Indes aus numerierten rownames("1","2",)
-      # index <- as.integer(row.names(df))
-      # # Echte Gen-IDs über Index holen
-      # gen_ids<-info$geneids[index]
-      # 
-      # # Mapping: Genname (GENE1 (GENE_ID)) nach gen_ids
-      # id2name <- setNames(
-      #   paste(info$genenames[index], "(", gen_ids, ")"),
-      #   gen_ids
-      # )
-      # 
-      # gene_labels <- id2name[gen_ids]
-      # missing <- is.na(gene_labels)
-      # gene_labels[missing] <- gen_ids[missing]
-      
       plot_data<- clustered_data()
       df<-plot_data$df
       
