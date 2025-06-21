@@ -212,23 +212,87 @@ server <- function (input, output, session) {
   
   
   # reaktive Berechnung mit eventReactive
-  trigger <- reactive({
-    input$submit
-    input$reload
-  })
+  #trigger <- reactive({
+  #  input$submit
+  #  input$reload
+  #})
   
-  test_result <- eventReactive(trigger(), {
-    Sys.sleep(5)  # Berechnung simulieren
+  #test_result <- eventReactive(trigger(), {
+  #  Sys.sleep(5)  # Berechnung simulieren
+  #  "Test erfolgreich"
+  #})
+  
+  test_result <- eventReactive(input$submit, {
+    Sys.sleep(5)
+    
+    val_distance <<- input$distance
+    val_linkage <<- input$linkage
+    val_alpha_i <<- input$alpha_i
+    val_alpha_j <<- input$alpha_j
+    val_beta <<- input$beta
+    val_gamma <<- input$gamma
+    val_clustercrit <<- input$clustercrit
+    val_n_clusters <<- input$n_clusters
+    val_colorpattern <<- input$colorpattern
+    val_disease <<- input$disease
+    
     "Test erfolgreich"
+    # Werte aus input als "nicht-reaktive" R-Variablen übernehmen
+   
+    
   })
+
+  reload_result <- eventReactive(input$reload, {
+    Sys.sleep(5)
+    
+    val_n_clusters <<- input$n_clusters
+    val_colorpattern <<- input$colorpattern
+    
+    "Reload erfolgreich"
+  })
+    
+  'observeEvent(input$submit,{
+  # Werte aus input als "nicht-reaktive" R-Variablen übernehmen
+  val_distance <<- input$distance
+  val_linkage <<- input$linkage
+  val_alpha_i <<- input$alpha_i
+  val_alpha_j <<- input$alpha_j
+  val_beta <<- input$beta
+  val_gamma <<- input$gamma
+  val_clustercrit <<- input$clustercrit
+  val_n_clusters <<- input$n_clusters
+  val_colorpattern <<- input$colorpattern
+  val_disease <<- input$disease
+})'
  
 # Ausgabe-Elemente
-  output$test_result_normal <- renderText({
+ ' output$test_result_normal <- renderText({
     test_result()
   })
   
   output$test_result_fullscreen <- renderText({
     test_result()
+  })'
+  
+  # Dynamisch unterscheiden, was zuletzt gedrückt wurde
+  output$test_result_normal <- renderText({
+    if (input$submit > input$reload) {
+      test_result()
+    } else if (input$reload > 0) {
+      reload_result()
+    } else {
+      "Bitte Submit oder Reload drücken"
+    }
+  })
+  
+  output$test_result_fullscreen <- renderText({
+    if (input$submit > input$reload) {
+      submit_result()
+    } else if (input$reload > 0) {
+      reload_result()
+    } else {
+      "Bitte Submit oder Reload drücken"
+    }
   })
 }
 
