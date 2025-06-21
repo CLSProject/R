@@ -1,7 +1,8 @@
 library(shiny)
-
 source("feature_selection/ReadInCSV.R")
 source("feature_selection/SelectFeaturesData.R")
+source("feature_selection/Normalization.R")
+
 source("clustern/clustering_base_algo.R") 
 if (!exists("cluster_both")) stop("Fehler: cluster_both wurde nicht geladen.")
 
@@ -68,12 +69,12 @@ zeichne_heatmap <- function(daten_matrix, palette_colors, zeilen_dendrogramm = N
       farbe_idx <- farben_matrix[i, j]
       if (!is.na(farbe_idx)) {
         # in Y-Richtung
-           rect(xleft = j - 1,
-                ybottom = zeilen_anzahl-i,
-                xright = j,
-                ytop = zeilen_anzahl-i+1,
-                col = palette_colors[farbe_idx], border = "black")
-    }
+        rect(xleft = j - 1,
+             ybottom = zeilen_anzahl-i,
+             xright = j,
+             ytop = zeilen_anzahl-i+1,
+             col = palette_colors[farbe_idx], border = "black")
+      }
     }
   }
   
@@ -100,7 +101,7 @@ zeichne_heatmap <- function(daten_matrix, palette_colors, zeilen_dendrogramm = N
 graphic_server <- function(input, output, session) {
   cat("DEBUG: Server wurde gestartet\n")
   
- #### Daten einlesen 
+  #### Daten einlesen 
   raw_data <- reactive({
     
     ### Test-Fkt 
@@ -118,6 +119,7 @@ graphic_server <- function(input, output, session) {
     cat("DEBUG: Datei wurde hochgeladen\n")
     
     result<- get_processed_patient_data(input$file$datapath)
+    df<- result[[1]]
     cat("DEBUG: Eingelesener Pfad:", input$file$datapath, "\n")
     if (is.null(df)) {
       cat("FEHLER: df ist NULL\n")
@@ -131,6 +133,7 @@ graphic_server <- function(input, output, session) {
   data<-reactive({
     df <- raw_data()[[1]]
     cat("DEBUG: Dim of df:", dim(df), "\n")
+    req(df)
     
     if (!is.matrix(df) && !is.data.frame(df)) {
       cat("FEHLER: df ist kein data.frame oder matrix, sondern:", class(df), "\n")
@@ -146,12 +149,16 @@ graphic_server <- function(input, output, session) {
       return(NULL)
     }
     
-   
     
-    m <- scale(df) # Z-Transformation
-    cat("DEBUG: Matrix nach scale():", dim(m), "\n")
+   # Normalization 
+    if (input$norm_method == "Z-Score") {
+      m<- z_score_norm(df)
+    } else if (input$norm_method == "Min-Max") {
+      m<- min_max_scale_norm(df)
+    } else {
+      m<- df  # fallback
+    } 
     return(m)
-    
   })
   
   #df <- read.csv(file_path, header = TRUE, row.names = 1)
@@ -266,7 +273,7 @@ graphic_server <- function(input, output, session) {
     }else{
       gene_ids_ordered<-rownames(df)
     }
-      
+    
     # labels = die Gene-IDs Index in der Heatmap-Reihenfolge
     gene_labels <- id2name[gene_ids_ordered]
     
@@ -353,11 +360,10 @@ graphic_server <- function(input, output, session) {
         gene_labels = gene_labels
       )
       
-        dev.off()
+      dev.off()
       
     }
   )
 }
-
 
 
