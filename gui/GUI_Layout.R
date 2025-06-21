@@ -76,7 +76,7 @@ ui <- fluidPage(
                   ),
       
       selectInput("linkage", "Linkage criterion...",
-                  choices = c("Single Linkage", "Complete Linkage", "free parameter selection")
+                  choices = c("Single Linkage", "Complete Linkage", "UPGMA", "free parameter selection")
                   ),
       fluidRow(
         column(3, numericInput("alpha_i", "alpha_i:", value = 0.5, step = 0.1)),
@@ -100,7 +100,8 @@ ui <- fluidPage(
       ), # Farbpattern 
       
       hr(),
-      actionButton("submit", "Submit")
+      actionButton("submit", "Submit"),
+      actionButton("reload", "Reload Visualization")
       
     ),
     
@@ -146,7 +147,8 @@ server <- function (input, output, session) {
       updateNumericInput(session, "alpha_i", value = 0.5)
       updateNumericInput(session, "alpha_j", value = 0.5)
       updateNumericInput(session, "beta", value = 0)
-      updateNumericInput(session, "gamma", value = -0.5)
+      updateNumericInput(session, "gamma", value = 0.5)
+      
     } else if (input$linkage == "Single Linkage"){
       shinyjs::disable("alpha_i")
       shinyjs::disable("alpha_j")
@@ -156,13 +158,42 @@ server <- function (input, output, session) {
       updateNumericInput(session, "alpha_i", value = 0.5)
       updateNumericInput(session, "alpha_j", value = 0.5)
       updateNumericInput(session, "beta", value = 0)
-      updateNumericInput(session, "gamma", value = 0.5)
+      updateNumericInput(session, "gamma", value = -0.5)
+      
+    } else if (input$linkage == "UPGMA"){
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0.5)
+      updateNumericInput(session, "alpha_j", value = 0.5)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = 0)
+      
     } else {
-      shinyjs::enable("alpha_i")
-      shinyjs::enable("alpha_j")
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
       shinyjs::enable("beta")
-      shinyjs::enable("gamma")
+      shinyjs::disable("gamma")
+      
     }
+  })
+  
+  observe({
+    req(input$linkage == "free parameter selection")  # Nur bei freier Auswahl aktiv
+    
+    # Berechne Parameter basierend auf Beta
+    beta_val <- input$beta
+    alphas <- 1 - beta_val
+    alpha_i <- alphas / 2
+    alpha_j <- alphas / 2
+    gamma <- 0
+    
+    # Update der anderen Eingabefelder
+    updateNumericInput(session, "alpha_i", value = round(alpha_i, 3))
+    updateNumericInput(session, "alpha_j", value = round(alpha_j, 3))
+    updateNumericInput(session, "gamma", value = gamma)
   })
 
 
@@ -178,17 +209,27 @@ server <- function (input, output, session) {
   })
   
   
-  # Ladeanzeige
-  observeEvent(input$submit, {
-    output$test_result_normal <- renderText({""})
-    output$test_result_fullscreen <- renderText({""})
-    
-    Sys.sleep(5)  # simulierte Ladezeit
-    
-    output$test_result_normal <- renderText({"Test erfolgreich"})
-    output$test_result_fullscreen <- renderText({"Test erfolgreich"})
+  
+  
+  # reaktive Berechnung mit eventReactive
+  trigger <- reactive({
+    input$submit
+    input$reload
   })
   
+  test_result <- eventReactive(trigger(), {
+    Sys.sleep(5)  # Berechnung simulieren
+    "Test erfolgreich"
+  })
+ 
+# Ausgabe-Elemente
+  output$test_result_normal <- renderText({
+    test_result()
+  })
+  
+  output$test_result_fullscreen <- renderText({
+    test_result()
+  })
 }
 
 shinyApp(ui = ui, server = server)
