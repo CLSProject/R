@@ -1,9 +1,8 @@
 library(shiny)
-source("ReadInCSV.R")
-source("SelectFeaturesData.R")
-source("Normalization.R")
-
-source("clustering_base_algo.R") 
+source("feature_selection/ReadInCSV.R")
+source("feature_selection/SelectFeaturesData.R")
+source("normalization/Normalization.R")
+source("clustern/clustering_base_algo.R")
 if (!exists("cluster_both")) stop("Fehler: cluster_both wurde nicht geladen.")
 
 #Dummy-Clustering-Funktion (zum Testen)
