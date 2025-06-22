@@ -1,7 +1,12 @@
+
+
+
+#install.packages("shinyjs")
+#install.packages("shinycssloaders")
 library(shiny)
 library(shinyjs)
 library(shinycssloaders)
-# install.packages("shinycssloaders")
+
 
 ui <- fluidPage(
   shinyjs::useShinyjs(), 
