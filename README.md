@@ -21,7 +21,7 @@ docker build --platform linux/amd64 -f ./Dockerfile -t shiny-app .
 After building the image, you can run the Docker container with the following command:
 
 ```
-docker run -p 3838:3838 shiny-app
+docker run -it -v ${PWD}:/srv/shiny-server/ -p 3838:3838 shiny-app 
 ```
 
 This command maps port 3838 of the container to port 3838 on your host machine.
