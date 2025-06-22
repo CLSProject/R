@@ -22,18 +22,19 @@ filter_usable_gen_ids <- function(gen_ids, limit) {
 }
 
 
-find_all_occurring_genes <- function(rownames_data, gen_ids) {
-  gen_ids[gen_ids %in% rownames_data]
-}
+get_filtered_matrix_genes <- function(data, data_gen_ids, query_gen_ids, limit = 0) { # nolint: line_length_linter.
+  query_gen_ids <- ensure_gene_ids_are_strings(query_gen_ids)
+  query_gen_ids <- filter_usable_gen_ids(query_gen_ids, limit)
 
+  # mask for all occurring gene ids
+  mask_gen_ids <- data_gen_ids %in% query_gen_ids
+  # actual filtering
+  data_gen_ids_filtered <- data_gen_ids[mask_gen_ids]
+  data_filtered <- data[mask_gen_ids, ]
+  query_gen_ids <- query_gen_ids[query_gen_ids %in% data_gen_ids_filtered]
 
-get_filtered_matrix_genes <- function(data, gen_ids, limit = 0) {
-  gen_ids <- ensure_gene_ids_are_strings(gen_ids)
-  gen_ids <- filter_usable_gen_ids(gen_ids, limit)
+  # changing row names to correspond to the gen ids
+  rownames(data_filtered) <- as.character(1:nrow(data_filtered))
 
-  gen_ids_filtered <- find_all_occurring_genes(rownames(data),
-                                               gen_ids)
-  data_filtered <- data[gen_ids_filtered, ]
-
-  list(data_filtered, gen_ids_filtered)
+  list(data_filtered, data_gen_ids_filtered, query_gen_ids)
 }
