@@ -7,22 +7,22 @@
     rm(list = ls(envir = .GlobalEnv), envir = .GlobalEnv)
   # define constants and functions, but be aware they might be overwritten by following loading of scripts
     # set working directory
-      # if (!require(this.path)) install.packages("this.path")
-      # library(this.path)
-      # setwd(dirname(this.path()))
+      if (!require(this.path)) install.packages("this.path")
+      library(this.path)
+      setwd(dirname(this.path()))
     # define dummy data
       DATA   <- matrix(c( 1,  0,  3,  4
-                        , 5,  6,  0,  8
+                        , 5,  6,  0, -8
                         , 9,  0, 11,  0
                         )
-                       ,ncol     = 4
-                       ,byrow    = TRUE
-                       ,dimnames = list(c("Zeile 1",  "Zeile 2",  "Zeile 3")
-                                       ,c("Spalte 1", "Spalte 2", "Spalte 3", "Spalte 4")
-                                       )
+                      ,ncol     = 4
+                      ,byrow    = TRUE
+                      ,dimnames = list(c("Zeile 1",  "Zeile 2",  "Zeile 3")
+                                      ,c("Spalte 1", "Spalte 2", "Spalte 3", "Spalte 4")
+                                      )
                       )
-      METHODS <- c("manhattan", "euclidean", "maximum", "binary"#, "canberra"
-                  ,"minkowski")
+      METHOD  <- "euclidean"
+      METHODS <- c("manhattan", "euclidean", "maximum", "binary","minkowski") #, "canberra")  miscalculation by stats::dist
       DIAG    <- FALSE
       UPPER   <- TRUE
       P       <- 3
@@ -91,4 +91,4 @@
 
   }
 
-  cat("\n\n\nFunction Tests for All Methods PASSED\n")
+  cat("\n\n\nFunctionality Tests for All Methods PASSED\n")

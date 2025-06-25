@@ -7,15 +7,14 @@
     rm(list = ls(envir = .GlobalEnv), envir = .GlobalEnv)
   # define constants and functions, but be aware they might be overwritten by following loading of scripts
     # set working directory
-      # if (!require(this.path)) install.packages("this.path")
-      # library(this.path)
-      # setwd(dirname(this.path()))
+      if (!require(this.path)) install.packages("this.path")
+      library(this.path)
+      setwd(dirname(this.path()))
     # define dummy data
       load("TCGA_kidney_unnormalized.RData")
       DATA <- dataset$data[1:300, 1:100]
       METHOD  <- "euclidean"
-      METHODS <- c("manhattan", "euclidean", "maximum", "binary"#, "canberra"
-                  ,"minkowski")
+      METHODS <- c("manhattan", "euclidean", "maximum", "binary","minkowski") #, "canberra")  miscalculation by stats::dist
       DIAG    <- FALSE
       UPPER   <- TRUE
       P       <- 3
@@ -84,4 +83,4 @@
 
   }
 
-  cat("\n\n\nFunction Tests for All Methods PASSED\n")
+  cat("\n\n\nPerformance Test PASSED\n")

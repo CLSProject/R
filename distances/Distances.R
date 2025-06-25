@@ -35,20 +35,19 @@
       return (only_one_on / at_least_one_on)
     }
 
-    # calculate_canberra <- function(row_lower_number, row_higher_number) {
-    #   distance <- 0
-    #   for (col_number in 1:ncol(data)) {
-    #     print(data[row_lower_number, col_number])
-    #     print(data[row_higher_number, col_number])
-    #     if (!is.na(summand <- (abs(data[row_lower_number, col_number]  -     data[row_higher_number, col_number])) /
-    #                           (abs(data[row_lower_number, col_number]) + abs(data[row_higher_number, col_number]))  )) {
-    #       print(summand)
-    #       distance <- distance + summand
-    #     }
-    #   }
-    #   cat("distance", distance, "\n")
-    #   return (distance)
-    # }
+    calculate_canberra <- function(row_lower_number, row_higher_number) {
+      distance <- 0
+      for (col_number in 1:ncol(data)) {
+        denominator <- abs(data[row_lower_number, col_number]) + abs(data[row_higher_number, col_number])
+        if (denominator != 0) {
+          summand <- ( (abs(data[row_lower_number, col_number]  -     data[row_higher_number, col_number]))
+                     / denominator
+                     )
+          distance <- distance + summand
+        }
+      }
+      return (distance)
+    }
 
     calculate_minkowski <- function(row_lower_number, row_higher_number) {
       distance <- 0
@@ -62,11 +61,6 @@
       dist <- c()
       for (row_lower_number in  1:(nrow(data) - 1)) {
         for (row_higher_number in (row_lower_number + 1): nrow(data)) {
-          # distance <- 0
-          # for (col_number in 1:ncol(data)) {
-          #   distance <- distance + abs(data[row_lower_number, col_number] - data[row_higher_number, col_number])
-          # }
-          # if (method == "manhattan") distance <- calculate_manhattan(row_lower_number, row_higher_number)
           distance <- get(paste("calculate", method, sep = "_"))(row_lower_number, row_higher_number)
           dist     <- c(dist, distance)
         }
@@ -74,33 +68,73 @@
       return (dist)
     }
 
-    # calculate_applied_euclidean <- function(row_lower_number, row_higher_number) {
-    #   distance <- 0
-    #   for (col_number in 1:ncol(data)) {
-    #     distance <- distance + (data[row_lower_number, col_number] - data[row_higher_number, col_number])^2
-    #   }
-    #   return (sqrt(distance))
-    # }
-    #
-    # calculate_applied_distances <- function(data, method) {
-    #   dist <- c()
-    #   lower_rows <- data[1, nrow(data) - 1]
-    #   apply(lower_rows
-    #        ,function(lower_row) {
-    #           higher_rows <- data[1, nrow(data) - 1]
-    #           apply(higher_rows,
-    #                ,function(higher_row) {
-    #                   distance <- get(paste("calculate_applied_", method, sep = "_"))(lower_row, higher_row)
-    #                   dist     <- c(dist, distance)
-    #                   return (dist)
-    #                 }
-    #                )
-    #         }
-    #        )
-    # }
+    calculate_vectorized_manhattan <- function(lower_row, higher_row) {
+      return (sum(
+                  abs(lower_row - higher_row)
+                 )
+             )
+    }
+
+    calculate_vectorized_euclidean <- function(lower_row, higher_row) {
+      return (sqrt(
+                   sum((lower_row - higher_row)^2
+                  )
+              )
+             )
+    }
+
+    calculate_vectorized_maximum <- function(lower_row, higher_row) {
+      return (max(abs(
+                      lower_row - higher_row
+                     )
+                 )
+             )
+    }
+
+    calculate_vectorized_binary <- function(lower_row, higher_row) {
+      lower_row_unequal_zero  <- lower_row  != 0
+      higher_row_unequal_zero <- higher_row != 0
+      only_one_on             <- sum(xor(lower_row_unequal_zero,   higher_row_unequal_zero))
+      at_least_one_on         <- sum(    lower_row_unequal_zero  | higher_row_unequal_zero )
+      return (only_one_on / at_least_one_on)
+    }
+
+    calculate_vectorized_canberra <- function(lower_row, higher_row) {
+      denominator <- abs(lower_row) + abs(higher_row)
+      numerator   <- abs(lower_row  - higher_row)
+      return (sum(ifelse(denominator == 0, NA, numerator / denominator)
+                 ,na.rm = TRUE
+                 )
+             )
+    }
+
+    calculate_vectorized_minkowski <- function(lower_row, higher_row) {
+      return (sum(
+                  abs(
+                      (lower_row - higher_row)^p
+                     )
+                 )^(1/p)
+             )
+    }
+
+    calculate_vectorized_distances <- function(data, method) {
+      dist <- c()
+      for (row_lower_number in  1:(nrow(data) - 1)) {
+        for (row_higher_number in (row_lower_number + 1): nrow(data)) {
+          distance <- get(paste("calculate_vectorized", method, sep = "_"))(data[row_lower_number, ], data[row_higher_number, ])
+          dist     <- c(dist, distance)
+        }
+      }
+      return (dist)
+    }
 
     # define object
-      obj <- calculate_distances(data, method)
+      # convert dist class and data frame as data to matrix
+        if (inherits(data, "dist"))   as.matrix(data)
+        else if (is.data.frame(data)) as.matrix(data)
+      # construct object
+        obj <- calculate_vectorized_distances(data, method)
+        # obj <- calculate_distances(data, method)
 
     # set class
       class(obj) <- "dist"
