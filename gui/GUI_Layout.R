@@ -41,6 +41,7 @@ ui <- fluidPage(
       
       selectInput("disease", "Select disease (1 out of 24)...", 
                   choices = c(
+                    "Please Select..." = "SelectDesease",
                     "GSE1297 – Alzheimer's Disease – Hippocampal CA1" = "GSE1297",
                     "GSE5281 – Alzheimer's Disease – Entorhinal Cortex" = "GSE5281_1",
                     "GSE5281 – Alzheimer's Disease – Hippocampus" = "GSE5281_2",
@@ -72,11 +73,11 @@ ui <- fluidPage(
       h4("Algorithm Parameters"),
       
       selectInput("distance", "Distance measure...",
-                  choices = c("Euclidean", "Manhattan", "Minkowski", "Canberra")
+                  choices = c("Please Select...", "Euclidean", "Manhattan", "Minkowski", "Canberra")
                   ),
       
       selectInput("linkage", "Linkage criterion...",
-                  choices = c("Single Linkage", "Complete Linkage", "UPGMA", "free parameter selection")
+                  choices = c("Please Select...", "Single Linkage", "Complete Linkage", "UPGMA", "free parameter selection")
                   ),
       fluidRow(
         column(3, numericInput("alpha_i", "alpha_i:", value = 0.5, step = 0.1)),
@@ -86,17 +87,17 @@ ui <- fluidPage(
       ),
       
       selectInput("clustercrit", "Cluster criterion...",
-                  choices = c("Group by: Patients", "Group by: Genes", "Group by: Patients and Genes")
+                  choices = c("Please Select...", "Group by: Patients", "Group by: Genes", "Group by: Patients and Genes")
                   ),
       
       
       hr(),
       h4("Visualization Settings"),
 
-      numericInput("n_clusters", "Number of clusters:", value = 3, min = 2, max = 10),
+      numericInput("n_clusters", "Number of clusters:", value = 0, min = 2, max = 10),
       
       selectInput("colorpattern", "Select Colorpattern...",
-                  choices = c("Rainbow", "Heat", "Topo")
+                  choices = c("Please Select...", "Rainbow", "Heat", "Topo")
       ), # Farbpattern 
       
       hr(),
@@ -159,6 +160,17 @@ server <- function (input, output, session) {
       updateNumericInput(session, "alpha_j", value = 0.5)
       updateNumericInput(session, "beta", value = 0)
       updateNumericInput(session, "gamma", value = -0.5)
+    
+    } else if (input$linkage == "Please Select..."){
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0)
+      updateNumericInput(session, "alpha_j", value = 0)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = 0)
       
     } else if (input$linkage == "UPGMA"){
       shinyjs::disable("alpha_i")
@@ -223,6 +235,27 @@ server <- function (input, output, session) {
   #})
   
   test_result <- eventReactive(input$submit, {
+    
+    if (is.null(input$file) ||
+        input$disease == "SelectDesease" ||
+        is.null(input$alpha_i) ||
+        is.null(input$alpha_j) ||
+        is.null(input$beta) ||
+        is.null(input$gamma) ||
+        imput$distance == "Please Select..." ||
+        imput$linkage == "Please Select..." ||
+        imput$clustercrit == "Please Select..." ||
+        imput$n_clusters == "Please Select..." ||
+        imput$colorpattern == "Please Select..." ){
+      
+      showModal(modalDialog(
+        title = "Missing Imputs",
+        "Please Fill in the remaining fields",
+        easyClose = TRUE
+      ))
+      
+    } else {
+    
     Sys.sleep(5)
     
     val_distance <<- input$distance
@@ -238,7 +271,7 @@ server <- function (input, output, session) {
     
     "Test erfolgreich"
     # Werte aus input als "nicht-reaktive" R-Variablen übernehmen
-   
+    }
     
   })
 
