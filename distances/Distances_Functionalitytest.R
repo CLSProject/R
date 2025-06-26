@@ -21,8 +21,7 @@
                                       ,c("Spalte 1", "Spalte 2", "Spalte 3", "Spalte 4")
                                       )
                       )
-      METHOD  <- "euclidean"
-      METHODS <- c("manhattan", "euclidean", "maximum", "binary","minkowski") #, "canberra")  miscalculation by stats::dist
+      METHODS <- c("manhattan", "euclidean", "maximum", "binary","minkowski", "canberra") # miscalculation of canberra by stats::dist
       DIAG    <- FALSE
       UPPER   <- TRUE
       P       <- 3
@@ -43,7 +42,7 @@
 
   for (method in METHODS) {
 
-    cat("\fFunction Test for Method", method, "\n")
+    cat("\fFunctionality Test for Method", method, "\n")
 
     # calculate distances by stats package
       cat("\n\n\ndist by stats package\n\n")

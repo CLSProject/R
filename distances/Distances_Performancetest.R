@@ -13,8 +13,7 @@
     # define dummy data
       load("TCGA_kidney_unnormalized.RData")
       DATA <- dataset$data[1:300, 1:100]
-      METHOD  <- "euclidean"
-      METHODS <- c("manhattan", "euclidean", "maximum", "binary","minkowski") #, "canberra")  miscalculation by stats::dist
+      METHODS <- "euclidean"
       DIAG    <- FALSE
       UPPER   <- TRUE
       P       <- 3
@@ -33,9 +32,9 @@
 
 # execute tests
 
-  for (method in METHOD) {
+  for (method in METHODS) {
 
-    cat("\fFunction Test for Method", method, "\n")
+    cat("\fPerformance Test for Method", method, "\n")
 
     # calculate distances by stats package
       cat("\n\n\ndist by stats package\n\n")
@@ -50,8 +49,38 @@
       #   cat("\n")
       cat("Execution Times by stats Package:\n\n", stats_time)
 
-    # calculate distances by distances script
-      cat("\n\n\ndist by distances script\n\n")
+    # calculate distances by distances script with for loops in method functions
+      cat("\n\n\ndist by distances script with for loops in method functions\n\n")
+      source("Distances_For_Loops.R")
+      # create and calculate dist
+        distances_time <- system.time(distances <- dist(DATA, method = method, diag = DIAG, upper = UPPER, p = P))
+      # # call methods
+      #   print(as.matrix(distances))
+      #   cat("\n")
+      #   print(distances)
+      #   cat("\n")
+      rm(dist)
+      rm(as.matrix.dist)
+      rm(print.dist)
+      cat("Execution Times by Distances Script:\n\n", distances_time)
+    # compare results
+      cat("\n\n\n")
+      if (all.equal(as.vector(stats_dist), as.vector(distances))) {
+        cat("Tolerance Test PASSED\n")
+      } else {
+        cat("Tolerance Test FAILED\n")
+        stop()
+      }
+      cat("\n")
+      if (identical(as.vector(stats_dist), as.vector(distances))) {
+        cat("Precision Test PASSED\n")
+      } else {
+        cat("Precision Test FAILED\n")
+        stop()
+      }
+
+    # calculate distances by distances script with vector operations in method functions
+      cat("\n\n\ndist by distances script with vector operations in method functions\n\n")
       source("Distances.R")
       # create and calculate dist
         distances_time <- system.time(distances <- dist(DATA, method = method, diag = DIAG, upper = UPPER, p = P))
@@ -64,7 +93,6 @@
       rm(as.matrix.dist)
       rm(print.dist)
       cat("Execution Times by Distances Script:\n\n", distances_time)
-
     # compare results
       cat("\n\n\n")
       if (all.equal(as.vector(stats_dist), as.vector(distances))) {
@@ -83,4 +111,4 @@
 
   }
 
-  cat("\n\n\nPerformance Test PASSED\n")
+  cat("\n\n\nPerformance Tests PASSED\n")
