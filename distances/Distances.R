@@ -1,3 +1,27 @@
+#' @title        dist: Distance Matrix Computation
+#' @description  This function computes and returns the distance matrix computed by using the specified distance measure to compute the distances between the rows of a data matrix.
+#' @usage        dist(data, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
+#'               print(obj)     # S3 method for dist
+#'               as.matrix(obj) # S3 method for dist
+#' @param data   numeric matrix, data frame or "dist" object
+#' @param method the distance measure to be used. This must be one of "euclidean", "maximum", "manhattan", "canberra", "binary" or "minkowski".
+#' @param diag   logical value indicating whether the diagonal of the distance matrix should be printed by print.dist
+#' @param upper  logical value indicating whether the upper triangle of the distance matrix should be printed by print.dist
+#' @param p      the power of the Minkowski distance.
+#' @return       object of class "dist"
+#'               The lower triangle of the distance matrix stored by columns in a vector, say do.
+#'               If n is the number of observations, i.e., n <- attr(do, "Size"), then for the dissimilarity between (row) i and j is do[n*(i-1) - i*(i-1)/2 + j-i].
+#'               The length of the vector is, i.e., of order
+#'               The object has the following attributes (besides "class" equal to "dist"):
+#'               Size:        integer, the number of observations in the dataset
+#'               Labels:      optionally, contains the labels, if any, of the observations of the dataset
+#'               Diag, Upper: logicals corresponding to the arguments diag and upper above, specifying how the object should be printed
+#'               call:        optionally, the call used to create the object.
+#'               method:      optionally, the distance method used; resulting from dist()
+#' @details
+
+
+
 # construct dist
   dist <- function(data, method = "euclidean", diag = FALSE, upper = FALSE, p = 2) {
 
