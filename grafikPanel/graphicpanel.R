@@ -1,8 +1,10 @@
+#konnte bisher nicht getestet werden, auch abhängig von Input und Output, muss noch final definiert werden
 library(shiny)
-source("feature_selection/ReadInCSV.R")
-source("feature_selection/SelectFeaturesData.R")
-source("normalization/Normalization.R")
-source("clustern/clustering_base_algo.R")
+
+source("../feature_selection/ReadInCSV.R")
+source("../feature_selection/SelectFeaturesData.R")
+source("../normalization/Normalization.R")
+source("../clustern/clustering_base_algo.R")
 if (!exists("cluster_both")) stop("Fehler: cluster_both wurde nicht geladen.")
 
 #Dummy-Clustering-Funktion (zum Testen)
@@ -231,8 +233,8 @@ graphic_server <- function(input, output, session) {
     }
     
     # dist-Objekt (Vektor) transponieren und Distanzmatrix
-    dist_pat <- as.matrix(dist(t(mat), method = input$distance))
-    dist_gene <- as.matrix(dist(mat, method = input$distance))
+    dist_pat <- as.matrix(dist(t(mat), method = tolower(input$distance)))
+    dist_gene <- as.matrix(dist(mat, method = tolower(input$distance)))
     
     cluster_raw <- cluster_both(
       dist_pat = dist_pat,

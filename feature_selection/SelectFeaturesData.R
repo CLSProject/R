@@ -1,5 +1,7 @@
 ###
 # functions
+# wo kommen die gen ids her? Aus der CSV? Wer stellt diese bereit?
+#Test funktioniert soweit, noch zu definieren: wo werden Outputdaten abgelegt und wie werden diese dann abgerufen?
 ensure_gene_ids_are_strings <- function(gen_ids) {
   # checking given gene ids to be strings (else problems with indexing later)
   if (! is.character(gen_ids)) {
