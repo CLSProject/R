@@ -5,6 +5,8 @@ library(shinycssloaders)
 
 source("../grafikPanel/graphicpanel.R") # Ermöglicht Zugriff auf Plot Funktionen
 
+options(shiny.maxRequestSize = 1000 * 1024^2) # 1GB max Upload
+
 ui <- fluidPage(
   shinyjs::useShinyjs(),
   tags$head(
@@ -37,30 +39,30 @@ ui <- fluidPage(
       ),
       selectInput("disease", "Select disease (1 out of 24)...",
         choices = c(
-          "GSE1297 – Alzheimer's Disease – Hippocampal CA1" = "hsa05010",
-          "GSE5281 – Alzheimer's Disease – Entorhinal Cortex" = "hsa05010",
-          "GSE5281 – Alzheimer's Disease – Hippocampus" = "hsa05010",
-          "GSE5281 – Alzheimer's Disease – Visual Cortex" = "hsa05010",
-          "GSE20153 – Parkinson's disease – Lymphoblasts" = "hsa05012",
-          "GSE20291 – Parkinson's disease – Putamen" = "hsa05012",
-          "GSE8762 – Huntington's disease – Blood" = "hsa05016",
-          "GSE4107 – Colorectal Cancer – Mucosa" = "hsa05210",
-          "GSE8671 – Colorectal Cancer – Colon (1)" = "hsa05210",
-          "GSE9348 – Colorectal Cancer – Colon (2)" = "hsa05210",
-          "GSE14762 – Renal Cancer – Kidney (1)" = "hsa05211",
-          "GSE781 – Renal Cancer – Kidney (2)" = "hsa05211",
-          "GSE15471 – Pancreatic Cancer – Pancreas (1)" = "hsa05212",
-          "GSE16515 – Pancreatic Cancer – Pancreas (2)" = "hsa05212",
-          "GSE19728 – Glioma – Brain" = "hsa05214",
-          "GSE21354 – Glioma – Brain & Spine" = "hsa05214",
-          "GSE6956 – Prostate Cancer – Prostate (1)" = "hsa05215",
-          "GSE6956 – Prostate Cancer – Prostate (2)" = "hsa05215",
-          "GSE3467 – Thyroid Cancer – Thyroid (1)" = "hsa05216",
-          "GSE3678 – Thyroid Cancer – Thyroid (2)" = "hsa05216",
-          "GSE9476 – AML – Blood/Bone marrow" = "hsa05221",
-          "GSE18842 – Lung Cancer – Lung (1)" = "hsa05223",
-          "GSE19188 – Lung Cancer – Lung (2)" = "hsa05223",
-          "GSE3585 – Cardiomyopathy – Heart" = "hsa05414"
+          "Alzheimer's Disease – Hippocampal CA1" = "hsa05010",
+          "Alzheimer's Disease – Entorhinal Cortex" = "hsa05010",
+          "Alzheimer's Disease – Hippocampus" = "hsa05010",
+          "Alzheimer's Disease – Visual Cortex" = "hsa05010",
+          "Parkinson's disease – Lymphoblasts" = "hsa05012",
+          "Parkinson's disease – Putamen" = "hsa05012",
+          "Huntington's disease – Blood" = "hsa05016",
+          "Colorectal Cancer – Mucosa" = "hsa05210",
+          "Colorectal Cancer – Colon (1)" = "hsa05210",
+          "Colorectal Cancer – Colon (2)" = "hsa05210",
+          "Renal Cancer – Kidney (1)" = "hsa05211",
+          "Renal Cancer – Kidney (2)" = "hsa05211",
+          "Pancreatic Cancer – Pancreas (1)" = "hsa05212",
+          "Pancreatic Cancer – Pancreas (2)" = "hsa05212",
+          "Glioma – Brain" = "hsa05214",
+          "Glioma – Brain & Spine" = "hsa05214",
+          "Prostate Cancer – Prostate (1)" = "hsa05215",
+          "Prostate Cancer – Prostate (2)" = "hsa05215",
+          "Thyroid Cancer – Thyroid (1)" = "hsa05216",
+          "Thyroid Cancer – Thyroid (2)" = "hsa05216",
+          "AML – Blood/Bone marrow" = "hsa05221",
+          "Lung Cancer – Lung (1)" = "hsa05223",
+          "Lung Cancer – Lung (2)" = "hsa05223",
+          "Cardiomyopathy – Heart" = "hsa05414"
         )),
 
 
@@ -80,7 +82,7 @@ ui <- fluidPage(
       fluidRow(
         column(3, numericInput("alpha_i", "alpha_i:", value = 0.5, step = 0.1)),
         column(3, numericInput("alpha_j", "alpha_j:", value = 0.5, step = 0.1)),
-        column(3, numericInput("beta", "beta:", value = 0, step = 0.1)),
+        column(3, numericInput("beta", "beta:", value = 0, step = 0.1, max = 0.99)),
         column(3, numericInput("gamma", "gamma:", value = 0.5, step = 0.1))
       ),
       selectInput("clustercrit", "Cluster criterion...",
@@ -89,6 +91,13 @@ ui <- fluidPage(
           "Group by: Genes", 
           "Group by: Patients and Genes"
           )),
+      
+      checkboxInput(inputId = "normalizationYesNo",
+                    label = "Normalization wanted",
+                    value = FALSE),
+      selectInput("normalization", "Normalization...",
+        choices = c("Please Select...", "Z Score", "Min Max")
+      ),
       hr(),
       h4("Visualization Settings"),
       numericInput("n_clusters", "Number of clusters:", value = 3, min = 2, max = 10),
@@ -97,7 +106,8 @@ ui <- fluidPage(
       ), # Farbpattern
 
       hr(),
-      actionButton("submit", "Submit")
+      actionButton("submit", "Submit"),
+      actionButton("download", "Download Result")
     ),
     mainPanel(
       h4("Section 2 - Ausgabe"),
@@ -122,40 +132,89 @@ ui <- fluidPage(
             actionButton("collapse", " - ")
           ),
           h3("Vollbild"),
-          withSpinner(textOutput("test_result_fullscreen"), type = 6),
+          withSpinner(plotOutput("heatmap_plot_fullscreen"), type = 6),
         )
       )
     )
   )
 )
 server <- function(input, output, session) {
-  observe({ # Eingabe der Parameter nur bei freier Parameterwahl erlauben
+  observe({
+    if (input$normalizationYesNo == TRUE){
+      shinyjs::enable("normalization")
+    } else if (input$normalizationYesNo == FALSE){
+      shinyjs::disable("normalization")
+    }
+    
+  })
+  observe({  # Eingabe der Parameter nur bei freier Parameterwahl erlauben
     if (input$linkage == "Complete Linkage") {
       shinyjs::disable("alpha_i")
       shinyjs::disable("alpha_j")
       shinyjs::disable("beta")
       shinyjs::disable("gamma")
-
-      updateNumericInput(session, "alpha_i", value = 0.5)
-      updateNumericInput(session, "alpha_j", value = 0.5)
-      updateNumericInput(session, "beta", value = 0)
-      updateNumericInput(session, "gamma", value = -0.5)
-    } else if (input$linkage == "Single Linkage") {
-      shinyjs::disable("alpha_i")
-      shinyjs::disable("alpha_j")
-      shinyjs::disable("beta")
-      shinyjs::disable("gamma")
-
+      
       updateNumericInput(session, "alpha_i", value = 0.5)
       updateNumericInput(session, "alpha_j", value = 0.5)
       updateNumericInput(session, "beta", value = 0)
       updateNumericInput(session, "gamma", value = 0.5)
+      
+    } else if (input$linkage == "Single Linkage"){
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0.5)
+      updateNumericInput(session, "alpha_j", value = 0.5)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = -0.5)
+    
+    } else if (input$linkage == "Please Select..."){
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0)
+      updateNumericInput(session, "alpha_j", value = 0)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = 0)
+      
+    } else if (input$linkage == "UPGMA"){
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0.5)
+      updateNumericInput(session, "alpha_j", value = 0.5)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = 0)
+      
     } else {
-      shinyjs::enable("alpha_i")
-      shinyjs::enable("alpha_j")
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
       shinyjs::enable("beta")
-      shinyjs::enable("gamma")
+      shinyjs::disable("gamma")
+      
     }
+  })
+  
+  observe({
+    req(input$linkage == "free parameter selection")  # Nur bei freier Auswahl aktiv
+    
+    # Berechne Parameter basierend auf Beta
+    beta_val <- input$beta
+    alphas <- 1 - beta_val
+    alpha_i <- alphas / 2
+    alpha_j <- alphas / 2
+    gamma <- 0
+    
+    # Update der anderen Eingabefelder
+    updateNumericInput(session, "alpha_i", value = round(alpha_i, 3))
+    updateNumericInput(session, "alpha_j", value = round(alpha_j, 3))
+    updateNumericInput(session, "gamma", value = gamma)
   })
 
 
