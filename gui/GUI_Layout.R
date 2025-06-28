@@ -3,6 +3,8 @@ library(shinyjs)
 library(shinycssloaders)
 # install.packages("shinycssloaders")
 
+options(shiny.maxRequestSize = 1000*1024^2) # 1GB max Upload
+
 ui <- fluidPage(
   shinyjs::useShinyjs(), 
 
@@ -90,6 +92,13 @@ ui <- fluidPage(
                   choices = c("Please Select...", "Group by: Patients", "Group by: Genes", "Group by: Patients and Genes")
                   ),
       
+      checkboxInput(inputId = "normalizationYesNo", 
+                    label = "Normalization wanted", 
+                    value = FALSE),
+      
+      selectInput("normalization", "Normalization...",
+                  choices = c("Please Select...", "Z Score", "Min Max")
+      ),
       
       hr(),
       h4("Visualization Settings"),
@@ -102,7 +111,8 @@ ui <- fluidPage(
       
       hr(),
       actionButton("submit", "Submit"),
-      actionButton("reload", "Reload Visualization")
+      actionButton("reload", "Reload Visualization"),
+      actionButton("download", "Download Result")
       
     ),
     
@@ -138,6 +148,14 @@ ui <- fluidPage(
 )
 server <- function (input, output, session) {
   
+  observe({
+    if (input$normalizationYesNo == TRUE){
+      shinyjs::enable("normalization")
+    } else if (input$normalizationYesNo == FALSE){
+      shinyjs::disable("normalization")
+    }
+    
+  })
   observe({  # Eingabe der Parameter nur bei freier Parameterwahl erlauben
     if (input$linkage == "Complete Linkage") {
       shinyjs::disable("alpha_i")
@@ -242,14 +260,15 @@ server <- function (input, output, session) {
         is.null(input$alpha_j) ||
         is.null(input$beta) ||
         is.null(input$gamma) ||
-        imput$distance == "Please Select..." ||
-        imput$linkage == "Please Select..." ||
-        imput$clustercrit == "Please Select..." ||
-        imput$n_clusters == "Please Select..." ||
-        imput$colorpattern == "Please Select..." ){
+        input$distance == "Please Select..." ||
+        input$linkage == "Please Select..." ||
+        input$clustercrit == "Please Select..." ||
+        input$n_clusters == "Please Select..." ||
+        input$colorpattern == "Please Select..." ||
+        (input$normalization == "Please Select..." && input$normalizationYesNo == TRUE)){
       
       showModal(modalDialog(
-        title = "Missing Imputs",
+        title = "Missing Inputs",
         "Please Fill in the remaining fields",
         easyClose = TRUE
       ))
@@ -258,6 +277,7 @@ server <- function (input, output, session) {
     
     Sys.sleep(5)
     
+    csv_datapath <<- input$file$datapath  #für Lucy
     val_distance <<- input$distance
     val_linkage <<- input$linkage
     val_alpha_i <<- input$alpha_i
@@ -268,6 +288,12 @@ server <- function (input, output, session) {
     val_n_clusters <<- input$n_clusters
     val_colorpattern <<- input$colorpattern
     val_disease <<- input$disease
+    if(input$normalizationYesNo == FALSE){
+      val_normalization <<- "none"
+    }else{
+      val_normalization <<- input$normalization
+    }
+    
     
     "Test erfolgreich"
     # Werte aus input als "nicht-reaktive" R-Variablen übernehmen
