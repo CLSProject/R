@@ -3,6 +3,8 @@ library(shinyjs)
 library(shinycssloaders)
 # install.packages("shinycssloaders")
 
+options(shiny.maxRequestSize = 1000*1024^2) # 1GB max Upload
+
 ui <- fluidPage(
   shinyjs::useShinyjs(), 
 
@@ -42,30 +44,30 @@ ui <- fluidPage(
       selectInput("disease", "Select disease (1 out of 24)...", 
                   choices = c(
                     "Please Select..." = "SelectDesease",
-                    "GSE1297 – Alzheimer's Disease – Hippocampal CA1" = "GSE1297",
-                    "GSE5281 – Alzheimer's Disease – Entorhinal Cortex" = "GSE5281_1",
-                    "GSE5281 – Alzheimer's Disease – Hippocampus" = "GSE5281_2",
-                    "GSE5281 – Alzheimer's Disease – Visual Cortex" = "GSE5281_3",
-                    "GSE20153 – Parkinson's disease – Lymphoblasts" = "GSE20153",
-                    "GSE20291 – Parkinson's disease – Putamen" = "GSE20291",
-                    "GSE8762 – Huntington's disease – Blood" = "GSE8762",
-                    "GSE4107 – Colorectal Cancer – Mucosa" = "GSE4107",
-                    "GSE8671 – Colorectal Cancer – Colon (1)" = "GSE8671",
-                    "GSE9348 – Colorectal Cancer – Colon (2)" = "GSE9348",
-                    "GSE14762 – Renal Cancer – Kidney (1)" = "GSE14762",
-                    "GSE781 – Renal Cancer – Kidney (2)" = "GSE781",
-                    "GSE15471 – Pancreatic Cancer – Pancreas (1)" = "GSE15471",
-                    "GSE16515 – Pancreatic Cancer – Pancreas (2)" = "GSE16515",
-                    "GSE19728 – Glioma – Brain" = "GSE19728",
-                    "GSE21354 – Glioma – Brain & Spine" = "GSE21354",
-                    "GSE6956 – Prostate Cancer – Prostate (1)" = "GSE6956_1",
-                    "GSE6956 – Prostate Cancer – Prostate (2)" = "GSE6956_2",
-                    "GSE3467 – Thyroid Cancer – Thyroid (1)" = "GSE3467",
-                    "GSE3678 – Thyroid Cancer – Thyroid (2)" = "GSE3678",
-                    "GSE9476 – AML – Blood/Bone marrow" = "GSE9476",
-                    "GSE18842 – Lung Cancer – Lung (1)" = "GSE18842",
-                    "GSE19188 – Lung Cancer – Lung (2)" = "GSE19188",
-                    "GSE3585 – Cardiomyopathy – Heart" = "GSE3585"
+                    "Alzheimer's Disease – Hippocampal CA1" = "GSE1297",
+                    "Alzheimer's Disease – Entorhinal Cortex" = "GSE5281_1",
+                    "Alzheimer's Disease – Hippocampus" = "GSE5281_2",
+                    "Alzheimer's Disease – Visual Cortex" = "GSE5281_3",
+                    "Parkinson's disease – Lymphoblasts" = "GSE20153",
+                    "Parkinson's disease – Putamen" = "GSE20291",
+                    "Huntington's disease – Blood" = "GSE8762",
+                    "Colorectal Cancer – Mucosa" = "GSE4107",
+                    "Colorectal Cancer – Colon (1)" = "GSE8671",
+                    "Colorectal Cancer – Colon (2)" = "GSE9348",
+                    "Renal Cancer – Kidney (1)" = "GSE14762",
+                    "Renal Cancer – Kidney (2)" = "GSE781",
+                    "Pancreatic Cancer – Pancreas (1)" = "GSE15471",
+                    "Pancreatic Cancer – Pancreas (2)" = "GSE16515",
+                    "Glioma – Brain" = "GSE19728",
+                    "Glioma – Brain & Spine" = "GSE21354",
+                    "Prostate Cancer – Prostate (1)" = "GSE6956_1",
+                    "Prostate Cancer – Prostate (2)" = "GSE6956_2",
+                    "Thyroid Cancer – Thyroid (1)" = "GSE3467",
+                    "Thyroid Cancer – Thyroid (2)" = "GSE3678",
+                    "AML – Blood/Bone marrow" = "GSE9476",
+                    "Lung Cancer – Lung (1)" = "GSE18842",
+                    "Lung Cancer – Lung (2)" = "GSE19188",
+                    "Cardiomyopathy – Heart" = "GSE3585"
                   )),
       
       
@@ -82,7 +84,7 @@ ui <- fluidPage(
       fluidRow(
         column(3, numericInput("alpha_i", "alpha_i:", value = 0.5, step = 0.1)),
         column(3, numericInput("alpha_j", "alpha_j:", value = 0.5, step = 0.1)),
-        column(3, numericInput("beta", "beta:", value = 0, step = 0.1)),
+        column(3, numericInput("beta", "beta:", value = 0, step = 0.1, max = 0.99)),
         column(3, numericInput("gamma", "gamma:", value = 0.5, step = 0.1))
       ),
       
@@ -90,6 +92,13 @@ ui <- fluidPage(
                   choices = c("Please Select...", "Group by: Patients", "Group by: Genes", "Group by: Patients and Genes")
                   ),
       
+      checkboxInput(inputId = "normalizationYesNo", 
+                    label = "Normalization wanted", 
+                    value = FALSE),
+      
+      selectInput("normalization", "Normalization...",
+                  choices = c("Please Select...", "Z Score", "Min Max")
+      ),
       
       hr(),
       h4("Visualization Settings"),
@@ -102,7 +111,8 @@ ui <- fluidPage(
       
       hr(),
       actionButton("submit", "Submit"),
-      actionButton("reload", "Reload Visualization")
+      actionButton("reload", "Reload Visualization"),
+      actionButton("download", "Download Result")
       
     ),
     
@@ -116,9 +126,9 @@ ui <- fluidPage(
           div(class = "float-button",
               actionButton("expand", " + ")
           ),
-          wellPanel(
+         wellPanel(
             h5("Teilbild"),
-            withSpinner(textOutput("test_result_normal"), type = 6),
+            textOutput("test_result_normal"),
           )
       ),
       
@@ -128,8 +138,8 @@ ui <- fluidPage(
             div(class = "float-button",
                 actionButton("collapse", " - ")
             ),
-            h3("Vollbild"),
-            withSpinner(textOutput("test_result_fullscreen"), type = 6),
+             h3("Vollbild"),
+            textOutput("test_result_normal"),
         )
       )
       
@@ -138,6 +148,14 @@ ui <- fluidPage(
 )
 server <- function (input, output, session) {
   
+  observe({
+    if (input$normalizationYesNo == TRUE){
+      shinyjs::enable("normalization")
+    } else if (input$normalizationYesNo == FALSE){
+      shinyjs::disable("normalization")
+    }
+    
+  })
   observe({  # Eingabe der Parameter nur bei freier Parameterwahl erlauben
     if (input$linkage == "Complete Linkage") {
       shinyjs::disable("alpha_i")
@@ -242,22 +260,24 @@ server <- function (input, output, session) {
         is.null(input$alpha_j) ||
         is.null(input$beta) ||
         is.null(input$gamma) ||
-        imput$distance == "Please Select..." ||
-        imput$linkage == "Please Select..." ||
-        imput$clustercrit == "Please Select..." ||
-        imput$n_clusters == "Please Select..." ||
-        imput$colorpattern == "Please Select..." ){
+        input$distance == "Please Select..." ||
+        input$linkage == "Please Select..." ||
+        input$clustercrit == "Please Select..." ||
+        input$n_clusters == "Please Select..." ||
+        input$colorpattern == "Please Select..." ||
+        (input$normalization == "Please Select..." && input$normalizationYesNo == TRUE)){
       
       showModal(modalDialog(
-        title = "Missing Imputs",
+        title = "Missing Inputs",
         "Please Fill in the remaining fields",
         easyClose = TRUE
       ))
       
     } else {
     
-    Sys.sleep(5)
+    #Sys.sleep(5)
     
+    csv_datapath <<- input$file$datapath  #für Lucy
     val_distance <<- input$distance
     val_linkage <<- input$linkage
     val_alpha_i <<- input$alpha_i
@@ -268,6 +288,12 @@ server <- function (input, output, session) {
     val_n_clusters <<- input$n_clusters
     val_colorpattern <<- input$colorpattern
     val_disease <<- input$disease
+    if(input$normalizationYesNo == FALSE){
+      val_normalization <<- "none"
+    }else{
+      val_normalization <<- input$normalization
+    }
+    
     
     "Test erfolgreich"
     # Werte aus input als "nicht-reaktive" R-Variablen übernehmen
@@ -276,7 +302,7 @@ server <- function (input, output, session) {
   })
 
   reload_result <- eventReactive(input$reload, {
-    Sys.sleep(5)
+    #Sys.sleep(5)
     
     val_n_clusters <<- input$n_clusters
     val_colorpattern <<- input$colorpattern
@@ -318,7 +344,7 @@ server <- function (input, output, session) {
     }
   })
   
-  output$test_result_fullscreen <- renderText({
+  'output$test_result_fullscreen <- renderText({
     if (input$submit > input$reload) {
       submit_result()
     } else if (input$reload > 0) {
@@ -326,7 +352,7 @@ server <- function (input, output, session) {
     } else {
       "Bitte Submit oder Reload drücken"
     }
-  })
+  })'
 }
 
 shinyApp(ui = ui, server = server)
