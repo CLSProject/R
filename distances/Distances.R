@@ -105,8 +105,8 @@
 
     # define object
       # convert dist class and data frame as data to matrix
-        if (inherits(data, "dist"))   as.matrix(data)
-        else if (is.data.frame(data)) as.matrix(data)
+        if (inherits(data, "dist"))   data <- as.matrix(data)
+        else if (is.data.frame(data)) data <- as.matrix(data)
       # construct object
         obj <- calculate_distances(data, method)
 

@@ -11,17 +11,19 @@
       library(this.path)
       setwd(dirname(this.path()))
     # define dummy data
-      DATA   <- matrix(c( 1,  0,  3,  4
-                        , 5,  6,  0, -8
-                        , 9,  0, 11,  0
-                        )
-                      ,ncol     = 4
-                      ,byrow    = TRUE
-                      ,dimnames = list(c("Zeile 1",  "Zeile 2",  "Zeile 3")
-                                      ,c("Spalte 1", "Spalte 2", "Spalte 3", "Spalte 4")
-                                      )
+      # DATA <- data.frame(Alter = c(25, 30, 22), Plz = c(11111, 22222, 33333))
+      DATA <- matrix(c( 1,  0,  3,  4
+                      , 5,  6,  0, -8
+                      , 9,  0, 11,  0
                       )
-      METHODS <- c("manhattan", "euclidean", "maximum", "binary","minkowski", "canberra") # miscalculation of canberra by stats::dist
+                    ,ncol     = 4
+                    ,byrow    = TRUE
+                    # ,dimnames = list(c("Zeile 1",  "Zeile 2",  "Zeile 3")
+                    #                 ,c("Spalte 1", "Spalte 2", "Spalte 3", "Spalte 4")
+                    #                 )
+                    )
+      # DATA <- dist(DATA)
+      METHODS <- c("manhattan") #, "euclidean", "maximum", "binary","minkowski", "canberra") # miscalculation of canberra by stats::dist
       DIAG    <- FALSE
       UPPER   <- TRUE
       P       <- 3
