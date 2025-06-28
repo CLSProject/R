@@ -76,35 +76,39 @@ ui <- fluidPage(
           "Canberra")),
       selectInput("linkage", "Linkage criterion...",
         choices = c(
+          "Please Select...",
           "Single Linkage", 
           "Complete Linkage", 
+          "UPGMA",
           "free parameter selection")),
       fluidRow(
         column(3, numericInput("alpha_i", "alpha_i:", value = 0.5, step = 0.1)),
         column(3, numericInput("alpha_j", "alpha_j:", value = 0.5, step = 0.1)),
         column(3, numericInput("beta", "beta:", value = 0, step = 0.1, max = 0.99)),
+        column(3, numericInput("beta", "beta:", value = 0, step = 0.1, max = 0.99)),
         column(3, numericInput("gamma", "gamma:", value = 0.5, step = 0.1))
       ),
       selectInput("clustercrit", "Cluster criterion...",
-        choices = c(
-          "Group by: Patients", 
-          "Group by: Genes", 
-          "Group by: Patients and Genes"
-          )),
+                  choices = c("Please Select...", "Group by: Patients", "Group by: Genes", "Group by: Patients and Genes")
+                  ),
       
-      checkboxInput(inputId = "normalizationYesNo",
-                    label = "Normalization wanted",
+      checkboxInput(inputId = "normalizationYesNo", 
+                    label = "Normalization wanted", 
                     value = FALSE),
+      
       selectInput("normalization", "Normalization...",
-        choices = c("Please Select...", "Z Score", "Min Max")
+                  choices = c("Please Select...", "Z Score", "Min Max")
       ),
+      
       hr(),
       h4("Visualization Settings"),
-      numericInput("n_clusters", "Number of clusters:", value = 3, min = 2, max = 10),
-      selectInput("colorpattern", "Select Colorpattern...",
-        choices = c("Rainbow", "Heat", "Topo")
-      ), # Farbpattern
 
+      numericInput("n_clusters", "Number of clusters:", value = 0, min = 2, max = 10),
+      
+      selectInput("colorpattern", "Select Colorpattern...",
+                  choices = c("Please Select...", "Rainbow", "Heat", "Topo")
+      ), # Farbpattern 
+      
       hr(),
       actionButton("submit", "Submit"),
       actionButton("download", "Download Result")
@@ -117,7 +121,7 @@ ui <- fluidPage(
           div(class = "float-button",
               actionButton("expand", " + ")
           ),
-          wellPanel(
+         wellPanel(
             h5("Teilbild"),
             withSpinner(plotOutput("heatmap_plot"), type = 6),
           )
@@ -159,6 +163,8 @@ server <- function(input, output, session) {
       updateNumericInput(session, "beta", value = 0)
       updateNumericInput(session, "gamma", value = 0.5)
       
+      updateNumericInput(session, "gamma", value = 0.5)
+      
     } else if (input$linkage == "Single Linkage"){
       shinyjs::disable("alpha_i")
       shinyjs::disable("alpha_j")
@@ -192,13 +198,57 @@ server <- function(input, output, session) {
       updateNumericInput(session, "beta", value = 0)
       updateNumericInput(session, "gamma", value = 0)
       
+      updateNumericInput(session, "gamma", value = -0.5)
+    
+    } else if (input$linkage == "Please Select..."){
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0)
+      updateNumericInput(session, "alpha_j", value = 0)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = 0)
+      
+    } else if (input$linkage == "UPGMA"){
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
+      shinyjs::disable("beta")
+      shinyjs::disable("gamma")
+      
+      updateNumericInput(session, "alpha_i", value = 0.5)
+      updateNumericInput(session, "alpha_j", value = 0.5)
+      updateNumericInput(session, "beta", value = 0)
+      updateNumericInput(session, "gamma", value = 0)
+      
     } else {
+      shinyjs::disable("alpha_i")
+      shinyjs::disable("alpha_j")
       shinyjs::disable("alpha_i")
       shinyjs::disable("alpha_j")
       shinyjs::enable("beta")
       shinyjs::disable("gamma")
       
+      shinyjs::disable("gamma")
+      
     }
+  })
+  
+  observe({
+    req(input$linkage == "free parameter selection")  # Nur bei freier Auswahl aktiv
+    
+    # Berechne Parameter basierend auf Beta
+    beta_val <- input$beta
+    alphas <- 1 - beta_val
+    alpha_i <- alphas / 2
+    alpha_j <- alphas / 2
+    gamma <- 0
+    
+    # Update der anderen Eingabefelder
+    updateNumericInput(session, "alpha_i", value = round(alpha_i, 3))
+    updateNumericInput(session, "alpha_j", value = round(alpha_j, 3))
+    updateNumericInput(session, "gamma", value = gamma)
   })
   
   observe({
