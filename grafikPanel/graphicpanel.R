@@ -5,139 +5,146 @@ source("../feature_selection/ReadInCSV.R")
 source("../feature_selection/SelectFeaturesData.R")
 source("../normalization/Normalization.R")
 source("../clustern/clustering_base_algo.R")
-if (!exists("cluster_both")) stop("Fehler: cluster_both wurde nicht geladen.")
-
-#Dummy-Clustering-Funktion (zum Testen)
-# if (!exists("cluster_both")) {
-#   message("Warnung: cluster_both nicht definiert – Dummy wird verwendet.")
-#   cluster_both <- function(data, alpha_i, alpha_j, beta, gamma, dist_crit, link_crit) {
-#     list(
-#       gene_clustering = hclust(dist(data)),
-#       pat_clustering = hclust(dist(t(data)))
-#     )
-#   }
-# }
-
-
-#Visualisierung Fkt 
-zeichne_heatmap <- function(daten_matrix, palette_colors, zeilen_dendrogramm = NULL,gene_labels = NULL) {
-  zeilen_anzahl <- nrow(daten_matrix)
-  spalten_anzahl <- ncol(daten_matrix)
+#Visualization function 
+draw_heatmap <- function(data_matrix, palette_colors, row_dendrogram = NULL,gene_labels = NULL) {
+  num_rows <- nrow(data_matrix)
+  num_columns <- ncol(data_matrix)
   
-  cat("DEBUG: zeichne_heatmap() wurde aufgerufen\n")
+  cat("DEBUG: draw_heatmap() was called\n")
   
-  #Anzahl der Zeilen (Gene) begrenzen falls zu groß
-  daten_matrix <- daten_matrix[1:min(600, nrow(daten_matrix)), ]
-  
-  #falls Labels existieren und gekürzt werden müssen
+ 
+  #if labels exist and need to be truncated
   if (!is.null(gene_labels)) {
-    gene_labels <- gene_labels[1:min(600, length(gene_labels))]
+    gene_labels <- gene_labels[1:min(nrow(data_matrix), length(gene_labels))]
   }
   
-  zeilen_anzahl <- nrow(daten_matrix)
-  spalten_anzahl <- ncol(daten_matrix)
   
-  #Debug-Ausgabe
+  num_rows <- nrow(data_matrix)
+  num_columns <- ncol(data_matrix)
+  
+  #Debug-output
   cat("DEBUG: Matrixgröße:\n")
-  cat("  Zeilen (Gene):", zeilen_anzahl, "\n")
-  cat("  Spalten (Proben):", spalten_anzahl, "\n")
-  cat("  Einzigartige Spaltennamen:", length(unique(colnames(daten_matrix))), "\n")
-  cat("  Einzigartige Zeilennamen:", length(unique(rownames(daten_matrix))), "\n\n")
+  cat("  rows (Genes):", num_rows, "\n")
+  cat("  columns (Samples):", num_columns, "\n")
+  cat("  Unique columnnames:", length(unique(colnames(data_matrix))), "\n")
+  cat("  Unique rownames:", length(unique(rownames(data_matrix))), "\n\n")
   
-  #Min/Max z-transformierten Werten berechnen (Skalengrenze für Farben)
-  min_wert<-min(daten_matrix, na.rm = TRUE)
-  max_wert<-max(daten_matrix, na.rm = TRUE)
+  #Calculate min/max z-transformed values (color scale limits)
+  min_value<-min(data_matrix, na.rm=TRUE)
+  max_value<-max(data_matrix, na.rm = TRUE)
   
-  print(paste("Min:", min_wert, "Max:", max_wert)) #Debug
+  print(paste("Min:", min_value, "Max:", max_value)) #Debug
   
-  layout(matrix(c(1,2,3), nrow = 1), widths = c(1.5, 5, 0.5))
+  layout(matrix(c(1,2,3), nrow = 1), widths = c(2.5, 5, 2))
+  
+  ## Dendrogramm  
+  # get_branches_heights <- function(dend) {
+  #   heights <- c()
+  #   if (!is.leaf(dend)) {
+  #     heights <- c(heights, attr(dend, "height"))
+  #     heights <- c(heights, get_branches_heights(dend[[1]]))
+  #     heights <- c(heights, get_branches_heights(dend[[2]]))
+  #   }
+  #   return(heights)
+  # }
+  # 
+  # # trim dendrogram
+  # trim_dendrogram <- function(dend, h_cut) {
+  #   if (is.leaf(dend)) return(dend)
+  #   if (attr(dend, "height") <= h_cut) {
+  #     dend[[1]] <- trim_dendrogram(dend[[1]], h_cut)
+  #     dend[[2]] <- trim_dendrogram(dend[[2]], h_cut)
+  #     return(dend)
+  #   } else {
+  #     # leaf nodes only 
+  #     attr(dend, "height") <- h_cut
+  #     return(dend)
+  #   }
+  # }
+  # max_h <- max(get_branches_heights(row_dendrogram))
+  # # Cut cluster height at the x-th hightest merge
+  # cut_h <- sort(unique(get_branches_heights(row_dendrogram)), decreasing = TRUE)[6]
+  # 
+  # 
+  # dend_trimmed <- trim_dendrogram(row_dendrogram, h_cut = cut_h)
+  # 
+  
+  par(mar = c(5,4,2,0), xpd = NA) #xpd=NA Make sure nothing gets truncated
+  plot(
+    row_dendrogram,
+    #dend_trimmed,
+    horiz = TRUE,
+    axes = FALSE,
+    xlab = "", ylab = "", main = "",
+    leaflab = "none",
+    ylim = c(0, num_rows),
+   
+  )
   
   
-  # Dendrogramm
-  par(mar = c(5,0,2,0))
-  if (!is.null(zeilen_dendrogramm)) {
-    # leere Achse (kein plot.dendrogram())
-    plot(zeilen_dendrogramm, horiz = TRUE, axes = FALSE, xlab = "", ylab = "", main = "", leaflab = "none", ylim=c(0,zeilen_anzahl))
-  } else {
-    plot.new()
-  }
-  
-  
-  # Heatmap
+  ## Heatmap
   par(mar = c(5,0,2,5))
-  plot(NA, xlim = c(0, spalten_anzahl), ylim = c(0, zeilen_anzahl),
+  plot(NA, xlim = c(0, num_columns), ylim = c(0,num_rows),
        xaxt = "n", yaxt = "n", xlab = "", ylab = "", main = "Heatmap", xaxs = "i",yaxs = "i")
   
-  # Farben berechnen
-  breaks <- seq(min_wert, max_wert, length.out = length(palette_colors) + 1)
+  # Compute colors
+  breaks <- seq(min_value, max_value, length.out = length(palette_colors) + 1)
   
-  farben_vec <- cut(as.vector(daten_matrix), breaks = breaks, labels = FALSE)
-  farben_matrix <- matrix(farben_vec, nrow = zeilen_anzahl, ncol = spalten_anzahl)
+  color_vec <- cut(as.vector(data_matrix), breaks = breaks, labels = FALSE)
+  color_matrix <- matrix(color_vec, nrow = num_rows, ncol = num_columns)
   
   
-  #Heatmap zeichnen (Zelle für Zelle)
-  cat("DEBUG: Schleife über", zeilen_anzahl, "Zeilen\n")#debug: if: Argument hat Länge 0
-  for (i in 1:zeilen_anzahl) {
-    for (j in 1:spalten_anzahl) {
-      farbe_idx <- farben_matrix[i, j]
-      if (!is.na(farbe_idx)) {
-        # in Y-Richtung
+  #Draw heatmap (cell by cell)
+  for (i in 1:num_rows) {
+    for (j in 1:num_columns) {
+      color_idx <- color_matrix[i, j]
+      if (!is.na(color_idx)) {
+        # in Y-Direction
         rect(xleft = j - 1,
-             ybottom = zeilen_anzahl-i,
+             ybottom = num_rows-i,
              xright = j,
-             ytop = zeilen_anzahl-i+1,
-             col = palette_colors[farbe_idx], border = "black")
+             ytop = num_rows-i+1,
+             col = palette_colors[color_idx], border = "black")
       }
     }
   }
   
-  # Achsenbeschriftung
-  axis(1, at = 0:(spalten_anzahl - 1) + 0.5, labels = colnames(daten_matrix), las = 2, cex.axis = 0.7)
-  axis(2, at = (1:zeilen_anzahl)-0.5,
+  # Axis labeling
+  axis(1, at = 0:(num_columns - 1) + 0.5, labels = colnames(data_matrix), las = 2, cex.axis = 0.7)
+  axis(2, at = (1:num_rows)-0.5,
        labels = gene_labels,
        las = 2, cex.axis = 0.6)
   
+  #color legend
+  legend_left <- num_columns + 0.2
+  legend_right <- num_columns + 2.0  
   
   for (k in 1:100) {
-    rect(xleft = spalten_anzahl + 0.2,
-         ybottom = (k - 1) * zeilen_anzahl / 100,
-         xright = spalten_anzahl + 0.6,
-         ytop = k * zeilen_anzahl / 100,
+    rect(xleft = legend_left,
+         ybottom = (k - 1) * num_rows / 100,
+         xright = legend_right,
+         ytop = k * num_rows / 100,
          col = palette_colors[k], border = "black")
   }
   
-  axis(4, at = seq(0, zeilen_anzahl, length.out = 5),
-       labels = round(seq(min_wert, max_wert, length.out = 5), 2), las = 1)
-  mtext("Werteskala", side = 4, line = 3)
-}
+  axis(4, at = seq(0, num_rows, length.out = 5),
+       labels = round(seq(min_value, max_value, length.out = 5), 2), las = 1)
+  mtext("Valuescale", side = 4, line = 3)
+
 
 graphic_server <- function(input, output, session) {
-  cat("DEBUG: Server wurde gestartet\n")
+  cat("DEBUG: Server has started\n")
   
-  #### Daten einlesen 
+  #### load data 
   raw_data <- reactive({
     
-    ### Test-Fkt 
-    #req(input$file)
-    # df <- read.csv(input$file$datapath, row.names = 1)
-    ## nur numerische Spalten
-    # df <- df[, sapply(df, is.numeric)]
-    # label <- rep("sample", ncol(df))  ## Dummy-Labels
-    # gene_ids <- rownames(df)  ## rownames = IDs
-    # list(df, label, gene_ids)
-    
-    
-    
     req(input$file)
-    cat("DEBUG: Datei wurde hochgeladen\n")
+    cat("DEBUG: File has been uploaded\n")
     
     result<- get_processed_patient_data(input$file$datapath)
-    df<- result[[1]]
-    cat("DEBUG: Eingelesener Pfad:", input$file$datapath, "\n")
-    if (is.null(df)) {
-      cat("FEHLER: df ist NULL\n")
-    }
-    cat("DEBUG: Ergebnis von get_processed_patient_data():\n")
+    cat("DEBUG: Input path:", input$file$datapath, "\n")
+    
+    cat("DEBUG: Result of get_processed_patient_data():\n")
     str(result)
     
     return(result)
@@ -147,49 +154,31 @@ graphic_server <- function(input, output, session) {
     df <- raw_data()[[1]]
     cat("DEBUG: Dim of df:", dim(df), "\n")
     req(df)
+   
     
     if (!is.matrix(df) && !is.data.frame(df)) {
-      cat("FEHLER: df ist kein data.frame oder matrix, sondern:", class(df), "\n")
-      cat("DEBUG: Klasse von df:", class(df), "\n")
+      cat("ERROR: df is neither a data.frame nor a matrix, but:", class(df), "\n")
+      cat("DEBUG: Class of df:", class(df), "\n")
       str(df)
       
       return(NULL)
     }
     
-    # Fehlerprüfung: 'data' muss vom Typ vector sein, war 'NULL'
+    # Error check: 'data' must be from type vector - was 'NULL'
     if (is.null(df) || nrow(df) == 0 || ncol(df) == 0) {
-      cat("WARNUNG: df ist leer: keine Zeilen oder Spalten\n")
+      cat("WARNING: df is empty: no rows or columns\n")
       return(NULL)
     }
+    ###Limit number of columns (samples) if too large
+    if (ncol(df) > 600) {
+      cat("INFO: df is being reduced to 600 samples\n")
+      df <- df[, 1:600]
+    }
     
-      m<-scale(df) #Normalisierung Test-Fkt
-    ## !!!
-    ## !!! 
-    ## !!! wenn Normalisierung in Normalisierung.R ausgelagert, dann diese Fkt. nutzen !!!
-    ## !!! 
-    # m <- normalized_data(df, input$norm_method, input$clustercrit)
-    
-      return(m)
-     })
-    
-   
+    return(df)
+  })
   
-  #df <- read.csv(file_path, header = TRUE, row.names = 1)
-  #cat("DEBUG: Datei gelesen. Dimensionen: ", dim(df), "\n")
-  
-  #label_row <- grepl("^\\s*labels\\s*$", tolower(rownames(df)))
-  #df <- df[!label_row, ]#Labels entfernen, falls geclustert
-  
-  #cat("Erste 10 rownames(df):\n")
-  #print(head(rownames(df), 10))
-  
-  #df <- scale(df) #Z-Transformation
-  #return(df)
-  #})
-  #example_data <- reactive({
-  # if (is.null(input$file)) get_example_data() else NULL
-  #})
-  
+ 
   gen_info <- reactive({
     #if (!is.null(example_data())) {
     #   info <- example_data()[[3]]
@@ -200,9 +189,17 @@ graphic_server <- function(input, output, session) {
     
     
     gen_ids <- raw_data()[[3]]
-    gen_ids<-ensure_gene_ids_are_strings(gen_ids)
+    ensure_gene_ids_are_strings <- function(ids) {
+      as.character(ids)
+    }
     
-    genenames <- paste0("Gene", seq_along(gen_ids))  
+    
+    # Adjust gene IDs to match reduced columns
+    if (length(gen_ids) > 600) {
+      gen_ids <- gen_ids[1:600]
+    }
+    
+    genenames <- paste0("Genes", seq_along(gen_ids))  
     list(
       genenames = genenames,
       geneids = gen_ids
@@ -210,7 +207,7 @@ graphic_server <- function(input, output, session) {
   })  
   
   
-  farben_palette <- reactive({
+  heatmap_palette <- reactive({
     if (input$colorpattern == "Rainbow") {
       colorRampPalette(c("red", "orange", "yellow", "green", "blue", "purple"))(100)
     } else if (input$colorpattern == "Heat") {
@@ -225,16 +222,16 @@ graphic_server <- function(input, output, session) {
     mat <- data()
     
     if (is.null(mat)) {
-      cat("FEHLER: Matrix ist NULL in clustering()\n")
+      cat("ERROR: Matrix is NULL during clustering()\n")
       return(NULL)
     }
     if (anyNA(mat)) {
-      cat("WARNUNG: Matrix enthält NA-Werte\n")
+      cat("WARNUNG: Matrix contains NA values\n")
     }
     
-    # dist-Objekt (Vektor) transponieren und Distanzmatrix
-    dist_pat <- as.matrix(dist(t(mat), method = tolower(input$distance)))
-    dist_gene <- as.matrix(dist(mat, method = tolower(input$distance)))
+    # Transpose dist object (vector) transponieren and distance matrix
+    dist_pat <- as.matrix(dist(t(mat), method = input$distance))
+    dist_gene <- as.matrix(dist(mat, method = input$distance))
     
     cluster_raw <- cluster_both(
       dist_pat = dist_pat,
@@ -246,7 +243,7 @@ graphic_server <- function(input, output, session) {
       link_crit = input$linkage
     )
     if (is.null(cluster_raw$gene_clustering$order) || !is.numeric(cluster_raw$gene_clustering$order)) {
-      cat("FEHLER: cluster_raw$gene_clustering$order ist NULL oder ungültig\n")
+      cat("ERROR: cluster_raw$gene_clustering$order is NULL or ungültig\n")
     }
     
     list(
@@ -257,44 +254,51 @@ graphic_server <- function(input, output, session) {
   
   
   clustered_data <- eventReactive(input$submit, {
-    df      <- data()        # gefilterte Matrix
-    cluster <- clustering()  # Dendrogramme
+     cat("Graphicpanel is loading...")
+    df      <- data()        # filtered matrix
+    cluster <- clustering()  # dendrograms
     
-    ##Zeilen & Spalten nach Clusterreihenfolge sortieren
+    ##Sort rows and columns according to clustering order
     row_order <- order.dendrogram(cluster$gene_clustering)
     col_order <- order.dendrogram(cluster$pat_clustering)
     df <- df[row_order, col_order]
     
-    ##Gen-Labels 
+    ##Gene-Labels 
     info <- gen_info()  # list(geneids, genenames)
-    cat("Erste 10 geneids aus gen_info():\n")
+    cat("First 10 geneids from gen_info():\n")
     print(head(info$geneids, 10))
-    cat("Erste 10 rownames(df):\n")
+    cat("First 10 rownames(df):\n")
     print(head(rownames(df), 10))
     
-    # Tabelle: GenName+ID
+    # table: geneNames+ID
     id2name <- setNames(
       paste(info$genenames, "(", info$geneids, ")"),
       as.character(info$geneids)
     )
-    #gen_ids nach Zeilennamen-Strings indexieren
+    # Index gen_ids by row name strings
     ids <- gen_info()$geneids
-    
-    with_index <- all(suppressWarnings(!is.na(as.integer(rownames(df)))))
-      
-    if (!with_index) {
-      warning("Nicht alle rownames lassen sich korrekt zu gen_ids mappen!")
+
+    if (all(rownames(df) %in% as.character(seq_along(ids)))) {
       index <- as.integer(rownames(df))
       gene_ids_ordered <- ids[index]
-    } else {
-      gene_ids_ordered <- rownames(df)
+    }else{
+      gene_ids_ordered<-rownames(df)
     }
+
     
     
-    # labels = die Gene-IDs Index in der Heatmap-Reihenfolge
+    # #####
+    # #Index from rownames (z.B. "1", "2", "3", ...) → 1, 2, 3, ...
+    # row_index <- as.integer(rownames(df))
+    # #Mapping over Gene-ID-Vector
+    # gene_ids_ordered<- gen_info()$geneids[row_index]
+    # #####
+    # 
+    
+    # labels =  Gene-IDs Index from Heatmap Order
     gene_labels <- id2name[gene_ids_ordered]
     
-    # Fallback: falls ein Name fehlt, die ID anzeigen
+    # Fallback: show ID if no name mapping is available
     missing <- is.na(gene_labels)
     gene_labels[missing] <- gene_ids_ordered[missing]
     
@@ -306,27 +310,39 @@ graphic_server <- function(input, output, session) {
     )
   })
   
+  output$heatmap_header <- renderText({
+    req(input$file, input$disease, input$distance, input$linkage, input$clustercrit)
+    
+    paste0(
+      "Analysis result for: ", input$file$name, "\n",
+      "Selected disease: ", input$disease, "\n",
+      "Distance measure: ", input$distance, "\n",
+      "Linkage criterion: ", input$linkage, "\n",
+      input$clustercrit
+    )
+  })
+  
   output$heatmap_plot <- renderPlot({
     plot_data <- req(clustered_data())
     
-    print("Gene-Labels für Heatmap:")
+    print("Gene-Labels for Heatmap:")
     print(plot_data$gene_labels)
     
-    zeichne_heatmap(
-      daten_matrix = plot_data$df,
-      palette_colors = farben_palette(),
-      zeilen_dendrogramm = plot_data$cluster$gene_clustering,
+    draw_heatmap(
+      data_matrix = plot_data$df,
+      palette_colors = heatmap_palette(),
+      row_dendrogram = plot_data$cluster$gene_clustering,
       gene_labels = plot_data$gene_labels
     )
     
   }, 
   height = function() {
     n <- nrow(data())
-    max(400, min(n * 25, 12000))
+    max(400, min(n * 25, 8000))
   },
   width = function() {
     n <- ncol(data())
-    max(800, min(n * 10, 10000))
+    max(600, min(n * 10, 8000))
   })
   
   output$download_plot <- downloadHandler(
@@ -337,20 +353,20 @@ graphic_server <- function(input, output, session) {
       plot_data<- clustered_data()
       df<-plot_data$df
       
-      # PDF-Größe angepasst
-      zeilen <- nrow(df)
-      spalten <- ncol(df)
+      # Set custom PDF dimensions
+      rows <- nrow(df)
+      columns <- ncol(df)
       cluster<- plot_data$cluster
       gene_labels<- plot_data$gene_labels
-      pdf_width <- max(8, min(spalten * 0.05, 50))
-      pdf_height <- max(8, min(zeilen * 0.15, 50))
+      pdf_width <- max(8, min(columns * 0.05, 50))
+      pdf_height <- max(8, min(rows * 0.15, 50))
       
       
       pdf(file, width = pdf_width, height = pdf_height)
-      zeichne_heatmap(
-        daten_matrix = plot_data$df,
-        palette_colors = farben_palette(),
-        zeilen_dendrogramm = cluster$gene_clustering,
+      draw_heatmap(
+        data_matrix = plot_data$df,
+        palette_colors = heatmap_palette(),
+        row_dendrogram = cluster$gene_clustering,
         gene_labels = gene_labels
       )
       
@@ -358,6 +374,7 @@ graphic_server <- function(input, output, session) {
       
     }
   )
-}
-
+  
+  
+}}
 
