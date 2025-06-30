@@ -1,3 +1,7 @@
+#Test funktioniert so weit, noch zu formalisieren: Input und Output Parameter, wo werden diese abgelegt, wer muss zugreifen?
+#Sollte nach Integration nochmal genau getestet werden, insb. Aufrufen der Daten - werden diese von Lucy auch als RData Format abgelegt?
+#Falls ja, wo, Pfad sollte definiert werden um abrufbar zu sein
+
 library(stats)
 getOrder_dfs<-function(merge){
   root<-nrow(merge)
