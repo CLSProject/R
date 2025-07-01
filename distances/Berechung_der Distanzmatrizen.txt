@@ -1,0 +1,52 @@
+4.3.3.1	Berechnung der Distanzmatrizen
+
+
+
+In Anlehnung an die Funktion dist aus dem R-Package stats wurde die Funktionalität, soweit sie für die Zwecke des Projekts relevant ist, nachimplementiert.
+
+
+
+Während die „Originalfunktion“ rechenintensive Anteile mit .Call() in native C-Funktionen auslagert, wurde für das laufende Projekt eine reine R-Implementierung angestrebt.
+Da die C-Funktionen vorcompiliert sind, ergibt sich dadurch allerdings ein erheblicher Geschwindigkeitsnachteil des interpretierten R-Codes gegenüber der compiliert Variante.
+TOBEDONE Werte
+
+
+
+
+
+
+
+4.3.3.1.x	Funktionalität
+
+Berechnet werden die Distanzen zwischen den n Zeilen einer numerischen (n x d)-Matrix, wobei eine Zeile als Vektor interpretiert wird, der einen Punkt in einem d-dimensionalen Raum definiert.
+In unserem Anwendungsfall haben die Zeilen und Spalten die Bedeutung von (ausgewählten) Genen und (Messprofilen von) Patienten. Die Matrix trägt die Werte für die entsprechenden gemessenen Genexpressionen.
+Da die Abstände der Zeilen berechnet werden, ist es wichtig, dass dist als Input eine Matrix in der richtigen Orientierung übergeben wird.
+Wenn z. B. darauf folgend ein Clustering nach Genen durchgeführt werden soll, müssen die Zeilen die Expressionswerte für ein Gen enthalten. Andernfalls,
+wenn später ein Clustering nach Patienten durchgeführt werden soll, müsste dieselbe Matrix vorher transponiert werden, damit die Zeilen das Expressionsprofil eines Patienten enthalten.
+
+Es werden also die Abstände der von den Zeilenvektoren definierten Punkte berechnet.
+Da Distanzen keine Richtung aufweisen, wird nur eine Richtung berechnet, was sich im Ergebnis als Dreiecksmatrix darstellen lässt. Die Hauptdiagonale weist nur 0 als Werte auf, da (unabhängig von der Methode der Abstandsbestimmung) der Abstand zwischen einer Zeile und sich selbst immer 0  ist.
+Speichersparender als als Matrix lässt sich eine solche Dreicksmatrix als Vektor im Speicher ablegen. Die Zurückrechnung in eine vollständige Matrix bei Bedarf gestaltet sich wegen der Verwendung von Vektoroperationen aufwandsarm.
+
+
+
+4.3.3.1.x	S3-Klasse dist
+
+Um einen Austausch zwischen der originalen dist-Funktion aus dem R-Package stats und der Nachimplementierung im R-Skript Distances.R einfach zu ermöglichen, wurden die Signaturen der Methoden identisch zum Original gehalten.
+Wg. Dreiecksmatrix keine Apply-Nutzung
+
+Interne Speicherung als Vektor
+
+
+
+4.3.3.1.x	Einschränkungen gegenüber stats::dist
+
+
+
+4.3.3.1.x	Funktionale Unittests
+
+
+
+4.3.3.1.x	Performance-Tests
+
+Orginal/For-Loops/Vektoroperationen
