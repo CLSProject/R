@@ -23,7 +23,7 @@
                     #                 )
                     )
       # DATA <- dist(DATA)
-      METHODS <- c("manhattan") #, "euclidean", "maximum", "binary","minkowski", "canberra") # miscalculation of canberra by stats::dist
+      METHODS <- c("manhattan", "euclidean", "maximum", "binary","minkowski", "canberra") # miscalculation of canberra by stats::dist
       DIAG    <- FALSE
       UPPER   <- TRUE
       P       <- 3
@@ -59,8 +59,39 @@
         cat("\n")
       cat("Execution Times by stats Package:\n\n", stats_time)
 
-    # calculate distances by distances script
-      cat("\n\n\ndist by distances script\n\n")
+    # calculate distances by distances script with for loops in method functions
+      cat("\n\n\ndist by distances script with for loops in method functions\n\n")
+      source("Distances_For_Loops.R")
+      # create and calculate dist
+        distances_time <- system.time(distances_for_loops <- dist(DATA, method = method, diag = DIAG, upper = UPPER, p = P))
+      # call methods
+        print(as.matrix(distances_for_loops))
+        cat("\n")
+        print(distances_for_loops)
+        cat("\n")
+      rm(dist)
+      rm(as.matrix.dist)
+      rm(print.dist)
+      cat("Execution Times by Distances Script:\n\n", distances_time, "\n")
+    # compare results
+      print(as.vector(stats_dist) - as.vector(distances_for_loops))
+      cat("\n\n\n")
+      if (all.equal(as.vector(stats_dist), as.vector(distances_for_loops))) {
+        cat("Tolerance Test PASSED\n")
+      } else {
+        cat("Tolerance Test FAILED\n")
+        stop()
+      }
+      cat("\n")
+      if (identical(as.vector(stats_dist), as.vector(distances_for_loops))) {
+        cat("Precision Test PASSED\n")
+      } else {
+        cat("Precision Test FAILED\n")
+        stop()
+      }
+
+    # calculate distances by distances script with vector operations in method functions
+      cat("\n\n\ndist by distances script with vector operations in method functions\n\n")
       source("Distances.R")
       # create and calculate dist
         distances_time <- system.time(distances <- dist(DATA, method = method, diag = DIAG, upper = UPPER, p = P))
@@ -72,9 +103,9 @@
       rm(dist)
       rm(as.matrix.dist)
       rm(print.dist)
-      cat("Execution Times by Distances Script:\n\n", distances_time)
-
+      cat("Execution Times by Distances Script:\n\n", distances_time, "\n")
     # compare results
+      print(as.vector(stats_dist) - as.vector(distances))
       cat("\n\n\n")
       if (all.equal(as.vector(stats_dist), as.vector(distances))) {
         cat("Tolerance Test PASSED\n")
