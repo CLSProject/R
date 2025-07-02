@@ -11,18 +11,18 @@
       library(this.path)
       setwd(dirname(this.path()))
     # define dummy data
-      # DATA <- data.frame(Alter = c(25, 30, 22), Plz = c(11111, 22222, 33333))
-      DATA <- matrix(c( 1,  0,  3,  4
-                      , 5,  6,  0, -8
-                      , 9,  0, 11,  0
-                      )
-                    ,ncol     = 4
-                    ,byrow    = TRUE
-                    # ,dimnames = list(c("Zeile 1",  "Zeile 2",  "Zeile 3")
-                    #                 ,c("Spalte 1", "Spalte 2", "Spalte 3", "Spalte 4")
-                    #                 )
-                    )
-      # DATA <- dist(DATA)
+      # DATA <- matrix(c( 1,  0,  3,  4
+      #                 , 5,  6,  0, -8
+      #                 , 9,  0, 11,  0
+      #                 )
+      #               ,ncol     = 4
+      #               ,byrow    = TRUE
+      #               ,dimnames = list(c("Zeile 1",  "Zeile 2",  "Zeile 3")
+      #                               ,c("Spalte 1", "Spalte 2", "Spalte 3", "Spalte 4")
+      #                               )
+      #               )
+      load("TCGA_kidney_unnormalized.RData")
+      DATA <- dataset$data[1:300, 1:100]
       METHODS <- c("manhattan", "euclidean", "maximum", "binary","minkowski", "canberra") # miscalculation of canberra by stats::dist
       DIAG    <- FALSE
       UPPER   <- TRUE
@@ -53,73 +53,74 @@
       # create and calculate dist
         stats_time <- system.time(stats_dist <- dist(DATA, method = method, diag = DIAG, upper = UPPER, p = P))
       # call methods
-        print(as.matrix(stats_dist))
+        print((as.matrix(stats_dist))[1:min(nrow(as.matrix(stats_dist)), 4), 1:min(ncol(as.matrix(stats_dist)), 4)])
         cat("\n")
-        print(stats_dist)
-        cat("\n")
-      cat("Execution Times by stats Package:\n\n", stats_time)
+        # print(stats_dist)
+        # cat("\n")
+      cat("Execution Times by stats Package:\n", stats_time)
 
     # calculate distances by distances script with for loops in method functions
-      cat("\n\n\ndist by distances script with for loops in method functions\n\n")
+      cat("\n\n\n\ndist by distances script with for loops in method functions\n\n")
       source("Distances_For_Loops.R")
       # create and calculate dist
         distances_time <- system.time(distances_for_loops <- dist(DATA, method = method, diag = DIAG, upper = UPPER, p = P))
       # call methods
-        print(as.matrix(distances_for_loops))
+        print((as.matrix(distances_for_loops))[1:min(nrow(as.matrix(distances_for_loops)), 4), 1:min(ncol(as.matrix(distances_for_loops)), 4)])
         cat("\n")
-        print(distances_for_loops)
-        cat("\n")
+        # print(distances_for_loops)
+        # cat("\n")
       rm(dist)
       rm(as.matrix.dist)
       rm(print.dist)
-      cat("Execution Times by Distances Script:\n\n", distances_time, "\n")
+      cat("Execution Times by Distances Script:\n", distances_time)
     # compare results
-      print(as.vector(stats_dist) - as.vector(distances_for_loops))
-      cat("\n\n\n")
+      cat("\n\n")
       if (all.equal(as.vector(stats_dist), as.vector(distances_for_loops))) {
-        cat("Tolerance Test PASSED\n")
+        cat("Tolerance Test PASSED")
       } else {
-        cat("Tolerance Test FAILED\n")
+        cat("Tolerance Test FAILED")
         stop()
       }
       cat("\n")
       if (identical(as.vector(stats_dist), as.vector(distances_for_loops))) {
-        cat("Precision Test PASSED\n")
+        cat("Precision Test PASSED")
       } else {
-        cat("Precision Test FAILED\n")
-        stop()
+        cat("Precision Test FAILED")
+        print((as.vector(stats_dist) - as.vector(distances_for_loops))[1:16])
       }
 
     # calculate distances by distances script with vector operations in method functions
-      cat("\n\n\ndist by distances script with vector operations in method functions\n\n")
+      cat("\n\n\n\ndist by distances script with vector operations in method functions\n\n")
       source("Distances.R")
       # create and calculate dist
         distances_time <- system.time(distances <- dist(DATA, method = method, diag = DIAG, upper = UPPER, p = P))
       # call methods
-        print(as.matrix(distances))
+        print((as.matrix(distances))[1:min(nrow(as.matrix(distances)), 4), 1:min(ncol(as.matrix(distances)), 4)])
         cat("\n")
-        print(distances)
-        cat("\n")
+        # print(distances)
+        # cat("\n")
       rm(dist)
       rm(as.matrix.dist)
       rm(print.dist)
-      cat("Execution Times by Distances Script:\n\n", distances_time, "\n")
+      cat("Execution Times by Distances Script:\n", distances_time)
     # compare results
-      print(as.vector(stats_dist) - as.vector(distances))
-      cat("\n\n\n")
+      cat("\n\n")
+      print(all.equal(as.vector(stats_dist), as.vector(distances)))
       if (all.equal(as.vector(stats_dist), as.vector(distances))) {
-        cat("Tolerance Test PASSED\n")
+        cat("Tolerance Test PASSED")
       } else {
-        cat("Tolerance Test FAILED\n")
+        cat("Tolerance Test FAILED")
         stop()
       }
       cat("\n")
       if (identical(as.vector(stats_dist), as.vector(distances))) {
-        cat("Precision Test PASSED\n")
+        cat("Precision Test PASSED")
       } else {
         cat("Precision Test FAILED\n")
-        stop()
+        print((as.vector(stats_dist) - as.vector(distances))[1:16])
       }
+
+    readline(prompt = "Drücke [Enter], um fortzufahren...")
 
   }
 
