@@ -22,9 +22,8 @@
 #'
 #' @return       object of class "dist"
 #'
-#' The lower triangle of the distance matrix stored by columns in a vector, say do.
-#' If n is the number of observations, i.e., n <- attr(do, "Size"), then for the dissimilarity between (row) i and j is do[n*(i-1) - i*(i-1)/2 + j-i].
-#' The length of the vector is, i.e., of order
+#' The lower triangle of the distance matrix stored by columns in a vector.
+#' If n is the number of data rows, the length of the vector is n * (n - 1) / 2, i.e., of order n^2.
 #'
 #' The object has the following attributes (besides "class" equal to "dist"):
 #'

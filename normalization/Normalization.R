@@ -5,6 +5,6 @@ z_score_norm <- function(x) {
 }
 
 
-min_max_scale_norm <- function(x) {
+min_max_scale <- function(x) {
   (x - min(x)) / (max(x) - min(x))
 }
