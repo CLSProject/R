@@ -267,14 +267,6 @@ server <- function(input, output, session) {
 
   # Handle data analysis when submit button is clicked
   observeEvent(input$submit, {
-    # Clear previous results
-    output$test_result_normal <- renderText({
-      ""
-    })
-    output$test_result_fullscreen <- renderText({
-      ""
-    })
-
     # Perform the analysis with more detailed progress steps
     withProgress(message = "Starting analysis...", value = 0, {
       process_start_time <- debug_time()
@@ -288,10 +280,6 @@ server <- function(input, output, session) {
         cat("DEBUG: Color palette generated.\n")
         create_color_palette(input$colorpattern)
       })
-
-      Sys.sleep(2)
-
-      # print(color_palette)
 
       # Step 2: Data preprocessing
       start_time <- debug_time()
@@ -320,8 +308,6 @@ server <- function(input, output, session) {
       end_time <- time_diff(start_time)
       cat("DEBUG: Distance calculation completed in", end_time, "seconds.\n")
 
-
-
       # Step 4: Clustering
       incProgress(0.2, detail = "Performing clustering...")
       start_time <- debug_time()
@@ -336,7 +322,6 @@ server <- function(input, output, session) {
       )
       end_time <- time_diff(start_time)
       cat("DEBUG: Clustering completed in", end_time, "seconds.\n")
-
 
       hc_pat <- cluster_raw$pat_clustering
       hc_gene <- cluster_raw$gene_clustering
@@ -359,12 +344,10 @@ server <- function(input, output, session) {
         colnames(graphic_data_frame) <- gene_df$ID[col_order]
       }
 
-
       incProgress(0.2, detail = "Finalizing...")
       start_time <- debug_time()
       output$heatmap_plot <- output$heatmap_plot_fullscreen <- renderPlot(
         {
-
           create_heatmap(
             daten_matrix = graphic_data_frame,
             palette_colors = color_palette(),
@@ -390,12 +373,58 @@ server <- function(input, output, session) {
           max(800, min((n * 15) + 300, 10000))
         }
       )
+
       end_time <- time_diff(start_time)
       cat("DEBUG: Heatmap rendering completed in", end_time, "seconds.\n")
 
       process_end_time <- debug_time()
       total_time <- time_diff(process_start_time)
       cat("DEBUG: Total processing time:", total_time, "seconds.\n")
+
+      output$download_plot <- downloadHandler(
+
+        filename = function() {
+          paste0("Analysis_Result_", Sys.Date(), ".pdf")
+        },
+        content = function(filename) {
+          data <- graphic_data_frame
+          rows_per_page <- 35 # Adjust based on desired readability
+          total_rows <- nrow(data)
+          num_pages <- ceiling(total_rows / rows_per_page)
+          total_cols <- ncol(data)
+
+          # Standard A4 dimensions in graphic_data_frame (8.27 x 11.69)
+          pdf(filename, width = 8.27, height = 11.69)
+
+          for (i in seq_len(num_pages)) {
+            start_row <- (i - 1) * rows_per_page + 1
+            end_row <- min(i * rows_per_page, total_rows)
+
+            df_subset <- data[
+              start_row:end_row,
+              1:total_cols, drop = FALSE
+            ]
+
+            pheatmap(df_subset,
+              main = paste(
+                "Analysis result for: ", input$file$name,
+                "\nSelected disease: ", input$disease,
+                " / Distance measure: ", input$distance,
+                "\nLinkage criterion: ", input$linkage,
+                " / ", input$clustercrit,
+                "\n", start_row, " to ", end_row,
+                " (", i, " of ", num_pages, " pages)"
+              ),
+              color = color_palette(),
+              fontsize = 6,
+              fontsize_row = 5,
+              fontsize_col = 5,
+              border_color = "black"
+            )
+          }
+          dev.off()
+        }
+      )
     })
   })
 }

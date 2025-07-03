@@ -285,27 +285,15 @@ server <- function(input, output, session) {
     output$test_result_normal <- renderText({""})
     output$test_result_fullscreen <- renderText({""})
     
-    # Perform the analysis (replace with your actual analysis function)
     withProgress(message = 'Analyzing data...', value = 0, {
-      # Here you would call your actual analysis function
-      # For example: results <- analyze_patient_data(patient_data(), selected_disease, params)
+
       results <- graphic_server(input = input, output = output, session = session)
       # Update progress
       incProgress(0.5)
       
       # Simulate processing for now
       Sys.sleep(2)
-      
-      # Format results
-      # result_text <- paste("Analysis completed for", selected_disease, 
-      #                      "using", distance_method, "distance and", 
-      #                      ifelse(linkage_method == "free parameter selection",
-      #                             "custom parameters", linkage_method),
-      #                      "with", cluster_count, "clusters")
-      
-      # # Update outputs with results
-      # output$test_result_normal <- renderText({result_text})
-      # output$test_result_fullscreen <- renderText({result_text})
+    
     })
   })
 }

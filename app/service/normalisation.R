@@ -7,5 +7,5 @@ min_max_scale_norm <- function(x) {
 }
 
 normalise <- function(patient_matrix, normalisation_method) {
-  get(normalisation_method)(patient_matrix)
+  t(apply(patient_matrix, 1, normalisation_method))
 }
